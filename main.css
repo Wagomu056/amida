@@ -1,0 +1,14 @@
+.contents {
+  display: flex;
+  flex-wrap: wrap;
+  width: 1200px;
+  gap: 0px 0px;
+}
+
+.item {
+  flex: 1;
+  text-align: center;
+  background-color: orange;
+  border-style: solid;
+  margin: 10px 15px;
+}
