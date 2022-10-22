@@ -8,7 +8,23 @@
 .item {
   flex: 1;
   text-align: center;
-  background-color: orange;
   border-style: solid;
+  border-width: 3px;
+  background-color: darkkhaki;
+  font-size: large;
   margin: 10px 15px;
+}
+
+button.item {
+  background-color: darkorange;
+  border-color: darkorchid;
+  cursor: pointer;
+}
+
+button.item:hover {
+  background-color: orange;
+}
+
+button.item:active {
+  border-style: inset;
 }
