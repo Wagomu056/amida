@@ -5,6 +5,9 @@ Object.defineProperty(define, 'canvasWidth', {
 Object.defineProperty(define, 'treeBlockHeight', {
   value: 30, writable: false
 });
+Object.defineProperty(define, 'treeBlockCount', {
+  value: 15, writable: false
+});
 
 class VerticalLine {
   constructor(idxX, countY, treeNum) {
@@ -56,19 +59,48 @@ class VerticalLine {
       }
 
       const parameters = getURLParameters();
-      const parameterNum = Object.keys(parameters).length;
+      const nameNum = Object.keys(parameters).length;
+      if (nameNum === 0) {
+        return;
+      }
 
-      const Tree = parameterNum;
-      const TreeBlockCount = 15;
+      const fromNameListElement = document.getElementById('fromNameList');
+      if (fromNameListElement === null) {
+        return;
+      }
 
+      // add items that is source name
+      for (let i = 0; i < nameNum; i++) {
+        button = document.createElement('button');
+        button.classList.add('item');
+        const keyName = 'name' + i;
+        button.textContent = parameters[keyName];
+        fromNameListElement.appendChild(button);
+      }
+
+      // draw amida to canvas
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = 'black';
 
       let verticalLines = [];
-      for (let i = 0; i < Tree; i++) {
-        verticalLines[i] = new VerticalLine(i, TreeBlockCount, Tree);
+      for (let i = 0; i < nameNum; i++) {
+        verticalLines[i] = new VerticalLine(i, define.treeBlockCount, nameNum);
         verticalLines[i].draw(ctx, 1.0);
+      }
+
+      const distNameListElement = document.getElementById('distNameList');
+      if (distNameListElement === null) {
+        return;
+      }
+
+      // add items that is dist name
+      for (let i = 0; i < nameNum; i++) {
+        p = document.createElement('p');
+        p.classList.add('item');
+        const keyName = 'name' + i;
+        p.textContent = parameters[keyName];
+        distNameListElement.appendChild(p);
       }
   }
 
