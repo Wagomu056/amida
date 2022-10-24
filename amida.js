@@ -27,6 +27,23 @@ class VerticalLine {
   }
 }
 
+class HorizontalLine {
+  constructor(xIdx, yIdx, treeNum) {
+    const gap = define.canvasWidth / treeNum;
+    const offset = gap * 0.5;
+    this.xl = (xIdx * gap + offset);
+    this.xr = ((xIdx + 1) * gap + offset);
+    this.y = (yIdx + 1) * define.treeBlockHeight;
+  }
+
+  draw(ctx, drawRatio) {
+    ctx.beginPath();
+    ctx.moveTo(this.xl, this.y);
+    ctx.lineTo(this.xr * drawRatio, this.y);
+    ctx.stroke();
+  }
+}
+
 function getURLParameters() {
   if (document.location.search.length === 0) {
     console.log("URL paramer is zero");
@@ -98,13 +115,63 @@ function drawAmida(nameNum) {
     }
 }
 
+function drawHorizontalBorder(borders, nameNum) {
+  const canvas = document.getElementById('canvas');
+  if (!canvas || !canvas.getContext){
+      return;
+  }
+
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = 'black';
+
+  let lines = [];
+  let xCount = borders.length;
+  for (let x = 0; x < xCount; x++) {
+    lines[x] = [];
+    let yCount = borders[x].length;
+    for (let y = 0; y < yCount; y++) {
+      if (borders[x][y] === 1) {
+        lines[x][y] = new HorizontalLine(x, y, nameNum);
+        lines[x][y].draw(ctx, 1.0);
+      }
+    }
+  }
+}
+
+function createHorizontalBorder(xNum, yNum) {
+  let borders = [];
+  for (let x = 0; x < xNum; x++) {
+    borders[x] = [];
+    for (let y = 0; y < yNum; y++) {
+      // If next to left, exclude.
+      if (x > 0) {
+        if (borders[x - 1][y] === 1) {
+          borders[x][y] = 0;
+          continue;
+        }
+      }
+
+      if (Math.random() <= 0.2) {
+        borders[x][y] = 1;
+      } else {
+        borders[x][y] = 0;
+      }
+    }
+  }
+  return borders;
+}
+
 {
   const parameters = getURLParameters();
   const nameNum = Object.keys(parameters).length;
-  if (nameNum !== 0) {
+  if (nameNum >= 2) {
+
     addSourceNameList(nameNum, parameters);
     addDistNameList(nameNum, parameters);
 
     drawAmida(nameNum);
+
+    let borders = createHorizontalBorder(nameNum - 1, define.treeBlockCount - 1);
+    drawHorizontalBorder(borders, nameNum);
   }
 }
