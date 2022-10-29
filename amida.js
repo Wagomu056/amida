@@ -98,11 +98,6 @@ function addDistNameList(nameNum, parameters) {
 }
 
 function drawAmida(ctx, nameNum) {
-    const canvas = document.getElementById('canvas');
-    if (!canvas || !canvas.getContext){
-        return;
-    }
-
     ctx.strokeStyle = 'black';
 
     let verticalLines = [];
@@ -113,11 +108,6 @@ function drawAmida(ctx, nameNum) {
 }
 
 function drawHorizontalBorder(ctx, borders, nameNum) {
-  const canvas = document.getElementById('canvas');
-  if (!canvas || !canvas.getContext){
-      return;
-  }
-
   ctx.strokeStyle = 'black';
 
   let lines = [];
@@ -157,20 +147,28 @@ function createHorizontalBorder(xNum, yNum) {
   return borders;
 }
 
+function main()
 {
   const parameters = getURLParameters();
   const nameNum = Object.keys(parameters).length;
-  if (nameNum >= 2) {
-
-    addSourceNameList(nameNum, parameters);
-    addDistNameList(nameNum, parameters);
-
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    drawAmida(ctx, nameNum);
-
-    let borders = createHorizontalBorder(nameNum - 1, define.treeBlockCount - 1);
-    drawHorizontalBorder(ctx, borders, nameNum);
+  if (nameNum < 2) {
+    return;
   }
+
+  addSourceNameList(nameNum, parameters);
+  addDistNameList(nameNum, parameters);
+
+  const canvas = document.getElementById('canvas');
+  if (!canvas || !canvas.getContext){
+      return;
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  drawAmida(ctx, nameNum);
+
+  let borders = createHorizontalBorder(nameNum - 1, define.treeBlockCount - 1);
+  drawHorizontalBorder(ctx, borders, nameNum);
 }
+
+main();
