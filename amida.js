@@ -97,50 +97,52 @@ function addDistNameList(nameNum, parameters) {
     }
 }
 
-function drawAmida(ctx, nameNum) {
-    ctx.strokeStyle = 'black';
-
+function createVerticalLines(nameNum) {
     let verticalLines = [];
     for (let i = 0; i < nameNum; i++) {
       verticalLines[i] = new VerticalLine(i, define.treeBlockCount, nameNum);
-      verticalLines[i].draw(ctx, 1.0);
+    }
+    return verticalLines;
+}
+
+function drawVerticalLine(ctx, verticalLines) {
+    ctx.strokeStyle = 'black';
+    for (const line of verticalLines) {
+      line.draw(ctx, 1.0);
     }
 }
 
-function drawHorizontalBorder(ctx, borders, nameNum) {
+function drawHorizontalLines(ctx, borders) {
   ctx.strokeStyle = 'black';
 
-  let lines = [];
   let xCount = borders.length;
   for (let x = 0; x < xCount; x++) {
-    lines[x] = [];
     let yCount = borders[x].length;
     for (let y = 0; y < yCount; y++) {
-      if (borders[x][y] === 1) {
-        lines[x][y] = new HorizontalLine(x, y, nameNum);
-        lines[x][y].draw(ctx, 1.0);
+      if (borders[x][y] !== null) {
+        borders[x][y].draw(ctx, 1.0);
       }
     }
   }
 }
 
-function createHorizontalBorder(xNum, yNum) {
+function createHorizontalLines(xNum, yNum, nameNum) {
   let borders = [];
   for (let x = 0; x < xNum; x++) {
     borders[x] = [];
     for (let y = 0; y < yNum; y++) {
       // If next to left, exclude.
       if (x > 0) {
-        if (borders[x - 1][y] === 1) {
-          borders[x][y] = 0;
+        if (borders[x - 1][y] !== null) {
+          borders[x][y] = null;
           continue;
         }
       }
 
       if (Math.random() <= 0.2) {
-        borders[x][y] = 1;
+        borders[x][y] = new HorizontalLine(x, y, nameNum);
       } else {
-        borders[x][y] = 0;
+        borders[x][y] = null;
       }
     }
   }
@@ -165,10 +167,14 @@ function main()
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  drawAmida(ctx, nameNum);
+  let virticalLines = createVerticalLines(nameNum);
+  drawVerticalLine(ctx, virticalLines);
 
-  let borders = createHorizontalBorder(nameNum - 1, define.treeBlockCount - 1);
-  drawHorizontalBorder(ctx, borders, nameNum);
+  let horizontalLines = createHorizontalLines(
+    nameNum - 1,
+    define.treeBlockCount - 1,
+    nameNum);
+  drawHorizontalLines(ctx, horizontalLines);
 }
 
 main();
