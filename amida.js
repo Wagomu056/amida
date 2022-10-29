@@ -97,15 +97,12 @@ function addDistNameList(nameNum, parameters) {
     }
 }
 
-function drawAmida(nameNum) {
+function drawAmida(ctx, nameNum) {
     const canvas = document.getElementById('canvas');
     if (!canvas || !canvas.getContext){
         return;
     }
 
-    // draw amida to canvas
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = 'black';
 
     let verticalLines = [];
@@ -115,13 +112,12 @@ function drawAmida(nameNum) {
     }
 }
 
-function drawHorizontalBorder(borders, nameNum) {
+function drawHorizontalBorder(ctx, borders, nameNum) {
   const canvas = document.getElementById('canvas');
   if (!canvas || !canvas.getContext){
       return;
   }
 
-  const ctx = canvas.getContext('2d');
   ctx.strokeStyle = 'black';
 
   let lines = [];
@@ -169,9 +165,12 @@ function createHorizontalBorder(xNum, yNum) {
     addSourceNameList(nameNum, parameters);
     addDistNameList(nameNum, parameters);
 
-    drawAmida(nameNum);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawAmida(ctx, nameNum);
 
     let borders = createHorizontalBorder(nameNum - 1, define.treeBlockCount - 1);
-    drawHorizontalBorder(borders, nameNum);
+    drawHorizontalBorder(ctx, borders, nameNum);
   }
 }
