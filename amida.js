@@ -154,6 +154,37 @@ function createHorizontalLines(xNum, yNum, nameNum) {
   return borders;
 }
 
+function drawRedLines(ctx, verticalLines, horizontalLines, startX) {
+  ctx.strokeStyle = 'magenta';
+
+  let lastVIdx = verticalLines.length - 1;
+  let maxHorizontalCount = define.treeBlockCount - 1;
+
+  var x = startX;
+  for (let y = 0; y < define.treeBlockCount; y++) {
+    verticalLines[x][y].draw(ctx, 1.0);
+
+    if (y < maxHorizontalCount) {
+      if (x < lastVIdx) {
+        if (horizontalLines[x][y] !== null) {
+          horizontalLines[x][y].draw(ctx, 1.0);
+          x += 1;
+          continue;
+        }
+      }
+
+      if (x > 0) {
+        if (horizontalLines[x - 1][y] !== null) {
+          horizontalLines[x - 1][y].draw(ctx, 1.0);
+          x -= 1;
+          continue;
+        }
+      }
+    }
+  }
+}
+
+
 function main()
 {
   const parameters = getURLParameters();
@@ -172,14 +203,16 @@ function main()
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  let virticalLines = createVerticalLines(nameNum);
-  drawVerticalLine(ctx, virticalLines);
+  let verticalLines = createVerticalLines(nameNum);
+  drawVerticalLine(ctx, verticalLines);
 
   let horizontalLines = createHorizontalLines(
     nameNum - 1,
     define.treeBlockCount - 1,
     nameNum);
   drawHorizontalLines(ctx, horizontalLines);
+
+  drawRedLines(ctx, verticalLines, horizontalLines, 0);
 }
 
 main();
