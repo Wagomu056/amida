@@ -12,17 +12,17 @@ Object.defineProperty(define, 'treeBlockCount', {
 });
 
 class VerticalLine {
-  constructor(idxX, countY, treeNum) {
+  constructor(idxX, idxY, treeNum) {
     const gap = define.canvasWidth / treeNum;
     const offset = gap * 0.5;
     this.x = (idxX * gap + offset);
-    this.y = (define.treeBlockHeight * countY);
+    this.y = idxY * define.treeBlockHeight;
   }
 
   draw(ctx, drawRatio) {
     ctx.beginPath();
-    ctx.moveTo(this.x, 0);
-    ctx.lineTo(this.x, this.y * drawRatio);
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.x, this.y + (define.treeBlockHeight * drawRatio));
     ctx.stroke();
   }
 }
@@ -99,8 +99,11 @@ function addDistNameList(nameNum, parameters) {
 
 function createVerticalLines(nameNum) {
     let verticalLines = [];
-    for (let i = 0; i < nameNum; i++) {
-      verticalLines[i] = new VerticalLine(i, define.treeBlockCount, nameNum);
+    for (let x = 0; x < nameNum; x++) {
+      verticalLines[x] = [];
+      for (let y = 0; y < define.treeBlockCount; y++) {
+        verticalLines[x][y] = new VerticalLine(x, y, nameNum);
+      }
     }
     return verticalLines;
 }
@@ -108,7 +111,9 @@ function createVerticalLines(nameNum) {
 function drawVerticalLine(ctx, verticalLines) {
     ctx.strokeStyle = 'black';
     for (const line of verticalLines) {
-      line.draw(ctx, 1.0);
+      for (const lineBlock of line) {
+        lineBlock.draw(ctx, 1.0);
+      }
     }
 }
 
