@@ -44,6 +44,11 @@ class HorizontalLine {
   }
 }
 
+// global vars
+var ctx;
+var verticalLines;
+var horizontalLines;
+
 function getURLParameters() {
   if (document.location.search.length === 0) {
     console.log("URL paramer is zero");
@@ -77,6 +82,9 @@ function addSourceNameList(nameNum, parameters) {
       button.classList.add('item');
       const keyName = 'name' + i;
       button.textContent = parameters[keyName];
+
+      button.addEventListener('click', () => { startDrawRedLines(i); });
+
       fromNameListElement.appendChild(button);
     }
 }
@@ -154,9 +162,18 @@ function createHorizontalLines(xNum, yNum, nameNum) {
   return borders;
 }
 
+const LineColors = [
+  '#FC0Fc0',
+  '#C0Fc0F',
+  '#0FC0FC',
+  '#CF0CF0',
+  '#F0CF0C',
+  '#0CF0CF',
+  '#F30F30'
+];
+
 function drawRedLines(ctx, verticalLines, horizontalLines, startX) {
-  //ctx.strokeStyle = 'magenta';
-  ctx.strokeStyle = '#FC0FC0';
+  ctx.strokeStyle = LineColors[(startX % LineColors.length)];
   ctx.lineWidth = 2;
 
   let lastVIdx = verticalLines.length - 1;
@@ -186,6 +203,9 @@ function drawRedLines(ctx, verticalLines, horizontalLines, startX) {
   }
 }
 
+function startDrawRedLines(startIdx) {
+  drawRedLines(ctx, verticalLines, horizontalLines, startIdx);
+}
 
 function main()
 {
@@ -202,19 +222,17 @@ function main()
   if (!canvas || !canvas.getContext){
       return;
   }
-  const ctx = canvas.getContext('2d');
+  ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  let verticalLines = createVerticalLines(nameNum);
+  verticalLines = createVerticalLines(nameNum);
   drawVerticalLine(ctx, verticalLines);
 
-  let horizontalLines = createHorizontalLines(
+  horizontalLines = createHorizontalLines(
     nameNum - 1,
     define.treeBlockCount - 1,
     nameNum);
   drawHorizontalLines(ctx, horizontalLines);
-
-  drawRedLines(ctx, verticalLines, horizontalLines, 0);
 }
 
 main();
