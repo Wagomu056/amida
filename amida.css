@@ -8,23 +8,30 @@
 .item {
   flex: 1;
   text-align: center;
-  border-style: solid;
-  border-width: 3px;
-  background-color: darkkhaki;
   font-size: large;
-  margin: 10px 15px;
 }
 
 button.item {
-  background-color: darkorange;
-  border-color: darkorchid;
+  border-radius: 50px;
+  background-color: #33B0DD;
+  color: white;
   cursor: pointer;
 }
 
 button.item:hover {
-  background-color: orange;
+  background-color: #99C000;
 }
 
 button.item:active {
   border-style: inset;
+}
+
+p.item {
+  background-color: #FF9000;
+  color: white;
+  border-style: solid;
+  border-color: gray;
+  border-width: 2px;
+  margin: 0px 5px;
+  padding: 0px, 30px;
 }

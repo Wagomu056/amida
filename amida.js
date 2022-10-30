@@ -155,7 +155,9 @@ function createHorizontalLines(xNum, yNum, nameNum) {
 }
 
 function drawRedLines(ctx, verticalLines, horizontalLines, startX) {
-  ctx.strokeStyle = 'magenta';
+  //ctx.strokeStyle = 'magenta';
+  ctx.strokeStyle = '#FC0FC0';
+  ctx.lineWidth = 2;
 
   let lastVIdx = verticalLines.length - 1;
   let maxHorizontalCount = define.treeBlockCount - 1;
