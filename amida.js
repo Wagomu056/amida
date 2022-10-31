@@ -201,9 +201,11 @@ function drawRedLines(ctx, verticalLines, horizontalLines, startX) {
       }
     }
   }
+
+  return x;
 }
 
-function setBorderColor(contentId, idx) {
+function setBorderColor(contentId, idx, color) {
     const contentList = document.getElementById(contentId);
     if (contentList === null) {
       return;
@@ -222,15 +224,17 @@ function setBorderColor(contentId, idx) {
       if (i === idx) {
         // idx 0 is "text"
         children[i + 1].style.border = 'solid';
-        children[i + 1].style.borderColor = LineColors[i];
+        children[i + 1].style.borderColor = color;
         break;
       }
     }
 }
 
 function startDrawRedLines(startIdx) {
-  setBorderColor('fromNameList', startIdx);
-  drawRedLines(ctx, verticalLines, horizontalLines, startIdx);
+  let color = LineColors[startIdx];
+  setBorderColor('fromNameList', startIdx, color);
+  let distIdx = drawRedLines(ctx, verticalLines, horizontalLines, startIdx);
+  setBorderColor('distNameList', distIdx, color);
 }
 
 function main()
