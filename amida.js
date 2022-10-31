@@ -203,7 +203,33 @@ function drawRedLines(ctx, verticalLines, horizontalLines, startX) {
   }
 }
 
+function setBorderColor(contentId, idx) {
+    const contentList = document.getElementById(contentId);
+    if (contentList === null) {
+      return;
+    }
+
+    if (contentList.hasChildNodes === false) {
+      return;
+    }
+
+    let children = contentList.childNodes;
+    for (let i = 0; i < children.length; i++) {
+        console.log(children[i]);
+    }
+
+    for (let i = 0; i < children.length; i++) {
+      if (i === idx) {
+        // idx 0 is "text"
+        children[i + 1].style.border = 'solid';
+        children[i + 1].style.borderColor = LineColors[i];
+        break;
+      }
+    }
+}
+
 function startDrawRedLines(startIdx) {
+  setBorderColor('fromNameList', startIdx);
   drawRedLines(ctx, verticalLines, horizontalLines, startIdx);
 }
 
