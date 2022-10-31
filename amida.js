@@ -99,10 +99,20 @@ function addDistNameList(nameNum, parameters) {
     for (let i = 0; i < nameNum; i++) {
       let p = document.createElement('p');
       p.classList.add('item');
+
+      let tp = document.createElement('p');
+      tp.classList.add('name');
       const keyName = 'name' + i;
-      p.textContent = parameters[keyName];
+      tp.textContent = parameters[keyName];
+      tp.style.transform = "rotateX(-90deg)";
+      p.appendChild(tp);
+
       distNameListElement.appendChild(p);
     }
+}
+
+function startFlipAnimation(element) {
+  element.classList.add('flieIn');
 }
 
 function createVerticalLines(nameNum) {
@@ -208,11 +218,11 @@ function drawRedLines(ctx, verticalLines, horizontalLines, startX) {
 function setBorderColor(contentId, idx, color) {
     const contentList = document.getElementById(contentId);
     if (contentList === null) {
-      return;
+      return null;
     }
 
     if (contentList.hasChildNodes === false) {
-      return;
+      return null;
     }
 
     let children = contentList.childNodes;
@@ -225,16 +235,23 @@ function setBorderColor(contentId, idx, color) {
         // idx 0 is "text"
         children[i + 1].style.border = 'solid';
         children[i + 1].style.borderColor = color;
-        break;
+        return children[i + 1];
       }
     }
+
+    return null;
 }
 
 function startDrawRedLines(startIdx) {
   let color = LineColors[startIdx];
   setBorderColor('fromNameList', startIdx, color);
   let distIdx = drawRedLines(ctx, verticalLines, horizontalLines, startIdx);
-  setBorderColor('distNameList', distIdx, color);
+  let distItem = setBorderColor('distNameList', distIdx, color);
+  if (distItem !== null) {
+    if (distItem.firstChild !== null) {
+      distItem.firstChild.classList.add('flipIn');
+    }
+  }
 }
 
 function main()
