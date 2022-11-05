@@ -34,12 +34,13 @@ class HorizontalLine {
     this.xl = (xIdx * gap + offset);
     this.xr = ((xIdx + 1) * gap + offset);
     this.y = (yIdx + 1) * define.treeBlockHeight;
+    this.gap = gap;
   }
 
   draw(ctx, drawRatio) {
     ctx.beginPath();
     ctx.moveTo(this.xl, this.y);
-    ctx.lineTo(this.xr * drawRatio, this.y);
+    ctx.lineTo(this.xl + (this.gap * drawRatio), this.y);
     ctx.stroke();
   }
 }
@@ -189,14 +190,15 @@ function drawRedLinesAll(ctx, verticalLines, horizontalLines, startX) {
   let lastVIdx = verticalLines.length - 1;
   let maxHorizontalCount = define.treeBlockCount - 1;
 
-  var x = startX;
+  let routeLines = [];
+  let x = startX;
   for (let y = 0; y < define.treeBlockCount; y++) {
-    verticalLines[x][y].draw(ctx, 1.0);
+    routeLines.push(verticalLines[x][y]);
 
     if (y < maxHorizontalCount) {
       if (x < lastVIdx) {
         if (horizontalLines[x][y] !== null) {
-          horizontalLines[x][y].draw(ctx, 1.0);
+          routeLines.push(horizontalLines[x][y]);
           x += 1;
           continue;
         }
@@ -204,7 +206,7 @@ function drawRedLinesAll(ctx, verticalLines, horizontalLines, startX) {
 
       if (x > 0) {
         if (horizontalLines[x - 1][y] !== null) {
-          horizontalLines[x - 1][y].draw(ctx, 1.0);
+          routeLines.push(horizontalLines[x - 1][y]);
           x -= 1;
           continue;
         }
@@ -212,18 +214,22 @@ function drawRedLinesAll(ctx, verticalLines, horizontalLines, startX) {
     }
   }
 
-  return x;
+  return {distIdx: x, routeLines: routeLines};
 }
 
 var currentDrawingIdx;
 var currentDrawingRatio;
+var routeLines;
 function drawRedLineLoop() {
-  if (currentDrawingIdx >= define.treeBlockCount ) {
+  if (currentDrawingIdx >= routeLines.length ) {
     return;
   }
 
-  currentDrawingRatio += 0.1;
-  verticalLines[0][currentDrawingIdx].draw(ctx, currentDrawingRatio);
+  currentDrawingRatio += 0.3;
+  if (currentDrawingRatio >= 1.0) {
+    currentDrawingRatio = 1.0;
+  }
+  routeLines[currentDrawingIdx].draw(ctx, currentDrawingRatio);
 
   if (currentDrawingRatio === 1.0) {
     currentDrawingRatio = 0.0;
@@ -264,17 +270,20 @@ function setBorderColor(contentId, idx, color) {
 function startDrawRedLines(startIdx) {
   let color = LineColors[startIdx];
   setBorderColor('fromNameList', startIdx, color);
-  let distIdx = drawRedLinesAll(ctx, verticalLines, horizontalLines, startIdx);
+  let rootInfo = drawRedLinesAll(ctx, verticalLines, horizontalLines, startIdx);
+
+  currentDrawingIdx = 0;
+  currentDrawingRatio = 0.0;
+  routeLines = rootInfo.routeLines;
+  window.requestAnimationFrame(drawRedLineLoop);
+
+  let distIdx = rootInfo.distIdx;
   let distItem = setBorderColor('distNameList', distIdx, color);
   if (distItem !== null) {
     if (distItem.firstChild !== null) {
       distItem.firstChild.classList.add('flipIn');
     }
   }
-
-  currentDrawingIdx = 0;
-  currentDrawingRatio = 0.0;
-  //window.requestAnimationFrame(drawRedLineLoop);
 }
 
 function main()
