@@ -65,6 +65,7 @@ var ctx;
 var verticalLines;
 var horizontalLines;
 
+// get parameters ---------------
 function getURLParameters() {
   if (document.location.search.length === 0) {
     console.log("URL paramer is zero");
@@ -86,6 +87,7 @@ function getURLParameters() {
   return result;
 }
 
+// name list ---------------
 function addSourceNameList(nameNum, parameters) {
     const fromNameListElement = document.getElementById('fromNameList');
     if (fromNameListElement === null) {
@@ -127,6 +129,44 @@ function addDistNameList(nameNum, parameters) {
     }
 }
 
+function setBorderColor(contentId, idx, color) {
+    const contentList = document.getElementById(contentId);
+    if (contentList === null) {
+      return null;
+    }
+
+    if (contentList.hasChildNodes === false) {
+      return null;
+    }
+
+    let children = contentList.childNodes;
+    for (let i = 0; i < children.length; i++) {
+        console.log(children[i]);
+    }
+
+    for (let i = 0; i < children.length; i++) {
+      if (i === idx) {
+        // idx 0 is "text"
+        children[i + 1].style.border = 'solid';
+        children[i + 1].style.borderColor = color;
+        return children[i + 1];
+      }
+    }
+
+    return null;
+}
+
+// draw line ---------------
+const LineColors = [
+  '#FC0Fc0',
+  '#C0Fc0F',
+  '#0FC0FC',
+  '#CF0CF0',
+  '#F0CF0C',
+  '#0CF0CF',
+  '#F30F30'
+];
+
 function startFlipAnimation(element) {
   element.classList.add('flieIn');
 }
@@ -149,20 +189,6 @@ function drawVerticalLine(ctx, verticalLines) {
         new LineDrawer(lineBlock).draw(ctx, 1.0);
       }
     }
-}
-
-function drawHorizontalLines(ctx, borders) {
-  ctx.strokeStyle = 'black';
-
-  let xCount = borders.length;
-  for (let x = 0; x < xCount; x++) {
-    let yCount = borders[x].length;
-    for (let y = 0; y < yCount; y++) {
-      if (borders[x][y] !== null) {
-        new LineDrawer(borders[x][y]).draw(ctx, 1.0);
-      }
-    }
-  }
 }
 
 function createHorizontalLines(xNum, yNum, nameNum) {
@@ -188,17 +214,21 @@ function createHorizontalLines(xNum, yNum, nameNum) {
   return borders;
 }
 
-const LineColors = [
-  '#FC0Fc0',
-  '#C0Fc0F',
-  '#0FC0FC',
-  '#CF0CF0',
-  '#F0CF0C',
-  '#0CF0CF',
-  '#F30F30'
-];
+function drawHorizontalLines(ctx, borders) {
+  ctx.strokeStyle = 'black';
 
-function drawRedLinesAll(ctx, verticalLines, horizontalLines, startX) {
+  let xCount = borders.length;
+  for (let x = 0; x < xCount; x++) {
+    let yCount = borders[x].length;
+    for (let y = 0; y < yCount; y++) {
+      if (borders[x][y] !== null) {
+        new LineDrawer(borders[x][y]).draw(ctx, 1.0);
+      }
+    }
+  }
+}
+
+function createTraceDrawers(ctx, verticalLines, horizontalLines, startX) {
   ctx.strokeStyle = LineColors[(startX % LineColors.length)];
   ctx.lineWidth = 2;
 
@@ -208,12 +238,12 @@ function drawRedLinesAll(ctx, verticalLines, horizontalLines, startX) {
   let routeLines = [];
   let x = startX;
   for (let y = 0; y < define.treeBlockCount; y++) {
-    routeLines.push(verticalLines[x][y]);
+    routeLines.push(new LineDrawer(verticalLines[x][y]));
 
     if (y < maxHorizontalCount) {
       if (x < lastVIdx) {
         if (horizontalLines[x][y] !== null) {
-          routeLines.push(horizontalLines[x][y]);
+          routeLines.push(new LineDrawer(horizontalLines[x][y]));
           x += 1;
           continue;
         }
@@ -221,7 +251,7 @@ function drawRedLinesAll(ctx, verticalLines, horizontalLines, startX) {
 
       if (x > 0) {
         if (horizontalLines[x - 1][y] !== null) {
-          routeLines.push(horizontalLines[x - 1][y]);
+          routeLines.push(new LineDrawer(horizontalLines[x - 1][y]));
           x -= 1;
           continue;
         }
@@ -254,44 +284,17 @@ function drawRedLineLoop() {
   window.requestAnimationFrame(drawRedLineLoop);
 }
 
-function setBorderColor(contentId, idx, color) {
-    const contentList = document.getElementById(contentId);
-    if (contentList === null) {
-      return null;
-    }
-
-    if (contentList.hasChildNodes === false) {
-      return null;
-    }
-
-    let children = contentList.childNodes;
-    for (let i = 0; i < children.length; i++) {
-        console.log(children[i]);
-    }
-
-    for (let i = 0; i < children.length; i++) {
-      if (i === idx) {
-        // idx 0 is "text"
-        children[i + 1].style.border = 'solid';
-        children[i + 1].style.borderColor = color;
-        return children[i + 1];
-      }
-    }
-
-    return null;
-}
-
 function startDrawRedLines(startIdx) {
   let color = LineColors[startIdx];
   setBorderColor('fromNameList', startIdx, color);
-  let rootInfo = drawRedLinesAll(ctx, verticalLines, horizontalLines, startIdx);
+  let traceInfo = createTraceDrawers(ctx, verticalLines, horizontalLines, startIdx);
 
   currentDrawingIdx = 0;
   currentDrawingRatio = 0.0;
-  routeLines = rootInfo.routeLines;
+  routeLines = traceInfo.routeLines;
   window.requestAnimationFrame(drawRedLineLoop);
 
-  let distIdx = rootInfo.distIdx;
+  let distIdx = traceInfo.distIdx;
   let distItem = setBorderColor('distNameList', distIdx, color);
   if (distItem !== null) {
     if (distItem.firstChild !== null) {
@@ -300,6 +303,7 @@ function startDrawRedLines(startIdx) {
   }
 }
 
+// main ----------
 function main()
 {
   const parameters = getURLParameters();
