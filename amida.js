@@ -44,28 +44,18 @@ class LineFactory {
   }
 }
 
-class VerticalLine {
-  constructor(idxX, idxY, treeNum) {
-    this.line = LineFactory.createVerticalLine(idxX, idxY, treeNum);
+class LineDrawer {
+  constructor(line) {
+    this.line = line;
   }
 
   draw(ctx, drawRatio) {
     ctx.beginPath();
     ctx.moveTo(this.line.x, this.line.y);
-    ctx.lineTo(this.line.x, this.line.y + (this.line.gapY * drawRatio));
-    ctx.stroke();
-  }
-}
-
-class HorizontalLine {
-  constructor(idxX, idxY, treeNum) {
-    this.line = LineFactory.createHorizontalLine(idxX, idxY, treeNum);
-  }
-
-  draw(ctx, drawRatio) {
-    ctx.beginPath();
-    ctx.moveTo(this.line.x, this.line.y);
-    ctx.lineTo(this.line.x + (this.line.gapX * drawRatio), this.line.y);
+    ctx.lineTo(
+      this.line.x + (this.line.gapX * drawRatio),
+      this.line.y + (this.line.gapY * drawRatio)
+      );
     ctx.stroke();
   }
 }
@@ -146,7 +136,7 @@ function createVerticalLines(nameNum) {
     for (let x = 0; x < nameNum; x++) {
       verticalLines[x] = [];
       for (let y = 0; y < define.treeBlockCount; y++) {
-        verticalLines[x][y] = new VerticalLine(x, y, nameNum);
+        verticalLines[x][y] = LineFactory.createVerticalLine(x, y, nameNum);
       }
     }
     return verticalLines;
@@ -156,7 +146,7 @@ function drawVerticalLine(ctx, verticalLines) {
     ctx.strokeStyle = 'black';
     for (const line of verticalLines) {
       for (const lineBlock of line) {
-        lineBlock.draw(ctx, 1.0);
+        new LineDrawer(lineBlock).draw(ctx, 1.0);
       }
     }
 }
@@ -169,7 +159,7 @@ function drawHorizontalLines(ctx, borders) {
     let yCount = borders[x].length;
     for (let y = 0; y < yCount; y++) {
       if (borders[x][y] !== null) {
-        borders[x][y].draw(ctx, 1.0);
+        new LineDrawer(borders[x][y]).draw(ctx, 1.0);
       }
     }
   }
@@ -189,7 +179,7 @@ function createHorizontalLines(xNum, yNum, nameNum) {
       }
 
       if (Math.random() <= 0.2) {
-        borders[x][y] = new HorizontalLine(x, y, nameNum);
+        borders[x][y] = LineFactory.createHorizontalLine(x, y, nameNum);
       } else {
         borders[x][y] = null;
       }
@@ -263,7 +253,6 @@ function drawRedLineLoop() {
 
   window.requestAnimationFrame(drawRedLineLoop);
 }
-
 
 function setBorderColor(contentId, idx, color) {
     const contentList = document.getElementById(contentId);
