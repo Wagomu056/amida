@@ -48,14 +48,34 @@ class LineDrawer {
   constructor(line) {
     this.line = line;
   }
+}
 
+class NormalLineDrawer extends LineDrawer {
   draw(ctx, drawRatio) {
     ctx.beginPath();
+
     ctx.moveTo(this.line.x, this.line.y);
     ctx.lineTo(
       this.line.x + (this.line.gapX * drawRatio),
       this.line.y + (this.line.gapY * drawRatio)
-      );
+    );
+
+    ctx.stroke();
+  }
+}
+
+class ReverseLineDrawer extends LineDrawer {
+  draw(ctx, drawRatio) {
+    ctx.beginPath();
+
+    let x = this.line.x + this.line.gapX;
+    let y = this.line.y + this.line.gapY;
+    ctx.moveTo(x, y);
+    ctx.lineTo(
+      x - (this.line.gapX * drawRatio),
+      y - (this.line.gapY * drawRatio)
+    );
+
     ctx.stroke();
   }
 }
@@ -101,7 +121,7 @@ function addSourceNameList(nameNum, parameters) {
       const keyName = 'name' + i;
       button.textContent = parameters[keyName];
 
-      button.addEventListener('click', () => { startDrawRedLines(i); });
+      button.addEventListener('click', () => { startDrawTraceLine(i); });
 
       fromNameListElement.appendChild(button);
     }
@@ -167,10 +187,6 @@ const LineColors = [
   '#F30F30'
 ];
 
-function startFlipAnimation(element) {
-  element.classList.add('flieIn');
-}
-
 function createVerticalLines(nameNum) {
     let verticalLines = [];
     for (let x = 0; x < nameNum; x++) {
@@ -186,7 +202,7 @@ function drawVerticalLine(ctx, verticalLines) {
     ctx.strokeStyle = 'black';
     for (const line of verticalLines) {
       for (const lineBlock of line) {
-        new LineDrawer(lineBlock).draw(ctx, 1.0);
+        new NormalLineDrawer(lineBlock, false).draw(ctx, 1.0);
       }
     }
 }
@@ -222,13 +238,13 @@ function drawHorizontalLines(ctx, borders) {
     let yCount = borders[x].length;
     for (let y = 0; y < yCount; y++) {
       if (borders[x][y] !== null) {
-        new LineDrawer(borders[x][y]).draw(ctx, 1.0);
+        new NormalLineDrawer(borders[x][y]).draw(ctx, 1.0);
       }
     }
   }
 }
 
-function createTraceDrawers(ctx, verticalLines, horizontalLines, startX) {
+function createTraceLineDrawers(ctx, verticalLines, horizontalLines, startX) {
   ctx.strokeStyle = LineColors[(startX % LineColors.length)];
   ctx.lineWidth = 2;
 
@@ -238,12 +254,12 @@ function createTraceDrawers(ctx, verticalLines, horizontalLines, startX) {
   let routeLines = [];
   let x = startX;
   for (let y = 0; y < define.treeBlockCount; y++) {
-    routeLines.push(new LineDrawer(verticalLines[x][y]));
+    routeLines.push(new NormalLineDrawer(verticalLines[x][y]));
 
     if (y < maxHorizontalCount) {
       if (x < lastVIdx) {
         if (horizontalLines[x][y] !== null) {
-          routeLines.push(new LineDrawer(horizontalLines[x][y]));
+          routeLines.push(new NormalLineDrawer(horizontalLines[x][y]));
           x += 1;
           continue;
         }
@@ -251,7 +267,7 @@ function createTraceDrawers(ctx, verticalLines, horizontalLines, startX) {
 
       if (x > 0) {
         if (horizontalLines[x - 1][y] !== null) {
-          routeLines.push(new LineDrawer(horizontalLines[x - 1][y]));
+          routeLines.push(new ReverseLineDrawer(horizontalLines[x - 1][y]));
           x -= 1;
           continue;
         }
@@ -265,7 +281,7 @@ function createTraceDrawers(ctx, verticalLines, horizontalLines, startX) {
 var currentDrawingIdx;
 var currentDrawingRatio;
 var routeLines;
-function drawRedLineLoop() {
+function drawTraceLineLoop() {
   if (currentDrawingIdx >= routeLines.length ) {
     return;
   }
@@ -281,18 +297,18 @@ function drawRedLineLoop() {
     currentDrawingIdx += 1;
   }
 
-  window.requestAnimationFrame(drawRedLineLoop);
+  window.requestAnimationFrame(drawTraceLineLoop);
 }
 
-function startDrawRedLines(startIdx) {
+function startDrawTraceLine(startIdx) {
   let color = LineColors[startIdx];
   setBorderColor('fromNameList', startIdx, color);
-  let traceInfo = createTraceDrawers(ctx, verticalLines, horizontalLines, startIdx);
+  let traceInfo = createTraceLineDrawers(ctx, verticalLines, horizontalLines, startIdx);
 
   currentDrawingIdx = 0;
   currentDrawingRatio = 0.0;
   routeLines = traceInfo.routeLines;
-  window.requestAnimationFrame(drawRedLineLoop);
+  window.requestAnimationFrame(drawTraceLineLoop);
 
   let distIdx = traceInfo.distIdx;
   let distItem = setBorderColor('distNameList', distIdx, color);
