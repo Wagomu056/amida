@@ -13,10 +13,10 @@ Object.defineProperty(define, 'treeBlockCount', {
 
 class Line {
   constructor(x1, y1, x2, y2) {
-    this.x = x1;
-    this.y = y1;
-    this.gapX = x2 - x1;
-    this.gapY = y2 - y1;
+    this.x1 = x1;
+    this.y1 = y1;
+    this.x2 = x2;
+    this.y2 = y2;
   }
 }
 
@@ -47,6 +47,8 @@ class LineFactory {
 class LineDrawer {
   constructor(line) {
     this.line = line;
+    this.gapX = line.x2 - line.x1;
+    this.gapY = line.y2 - line.y1;
   }
 }
 
@@ -54,10 +56,10 @@ class NormalLineDrawer extends LineDrawer {
   draw(ctx, drawRatio) {
     ctx.beginPath();
 
-    ctx.moveTo(this.line.x, this.line.y);
+    ctx.moveTo(this.line.x1, this.line.y1);
     ctx.lineTo(
-      this.line.x + (this.line.gapX * drawRatio),
-      this.line.y + (this.line.gapY * drawRatio)
+      this.line.x1 + (this.gapX * drawRatio),
+      this.line.y1 + (this.gapY * drawRatio)
     );
 
     ctx.stroke();
@@ -68,12 +70,12 @@ class ReverseLineDrawer extends LineDrawer {
   draw(ctx, drawRatio) {
     ctx.beginPath();
 
-    let x = this.line.x + this.line.gapX;
-    let y = this.line.y + this.line.gapY;
+    let x = this.line.x2;
+    let y = this.line.y2;
     ctx.moveTo(x, y);
     ctx.lineTo(
-      x - (this.line.gapX * drawRatio),
-      y - (this.line.gapY * drawRatio)
+      x - (this.gapX * drawRatio),
+      y - (this.gapY * drawRatio)
     );
 
     ctx.stroke();
