@@ -182,7 +182,7 @@ const LineColors = [
   '#F30F30'
 ];
 
-function drawRedLines(ctx, verticalLines, horizontalLines, startX) {
+function drawRedLinesAll(ctx, verticalLines, horizontalLines, startX) {
   ctx.strokeStyle = LineColors[(startX % LineColors.length)];
   ctx.lineWidth = 2;
 
@@ -215,6 +215,25 @@ function drawRedLines(ctx, verticalLines, horizontalLines, startX) {
   return x;
 }
 
+var currentDrawingIdx;
+var currentDrawingRatio;
+function drawRedLineLoop() {
+  if (currentDrawingIdx >= define.treeBlockCount ) {
+    return;
+  }
+
+  currentDrawingRatio += 0.1;
+  verticalLines[0][currentDrawingIdx].draw(ctx, currentDrawingRatio);
+
+  if (currentDrawingRatio === 1.0) {
+    currentDrawingRatio = 0.0;
+    currentDrawingIdx += 1;
+  }
+
+  window.requestAnimationFrame(drawRedLineLoop);
+}
+
+
 function setBorderColor(contentId, idx, color) {
     const contentList = document.getElementById(contentId);
     if (contentList === null) {
@@ -245,13 +264,17 @@ function setBorderColor(contentId, idx, color) {
 function startDrawRedLines(startIdx) {
   let color = LineColors[startIdx];
   setBorderColor('fromNameList', startIdx, color);
-  let distIdx = drawRedLines(ctx, verticalLines, horizontalLines, startIdx);
+  let distIdx = drawRedLinesAll(ctx, verticalLines, horizontalLines, startIdx);
   let distItem = setBorderColor('distNameList', distIdx, color);
   if (distItem !== null) {
     if (distItem.firstChild !== null) {
       distItem.firstChild.classList.add('flipIn');
     }
   }
+
+  currentDrawingIdx = 0;
+  currentDrawingRatio = 0.0;
+  //window.requestAnimationFrame(drawRedLineLoop);
 }
 
 function main()
