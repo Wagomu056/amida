@@ -11,36 +11,61 @@ Object.defineProperty(define, 'treeBlockCount', {
   value: 15, writable: false
 });
 
-class VerticalLine {
-  constructor(idxX, idxY, treeNum) {
+class Line {
+  constructor(x1, y1, x2, y2) {
+    this.x = x1;
+    this.y = y1;
+    this.gapX = x2 - x1;
+    this.gapY = y2 - y1;
+  }
+}
+
+class LineFactory {
+  static createVerticalLine(idxX, idxY, treeNum) {
     const gap = define.canvasWidth / treeNum;
     const offset = gap * 0.5;
-    this.x = (idxX * gap + offset);
-    this.y = idxY * define.treeBlockHeight;
+    let x1 = idxX * gap + offset;
+    let y1 = idxY * define.treeBlockHeight;
+    let x2 = x1;
+    let y2 = y1 + define.treeBlockHeight;
+
+    return new Line(x1, y1, x2, y2);
+  }
+
+  static createHorizontalLine(xIdx, yIdx, treeNum) {
+    const gap = define.canvasWidth / treeNum;
+    const offset = gap * 0.5;
+    let x1 = xIdx * gap + offset;
+    let x2 = x1 + gap;
+    let y1 = (yIdx + 1) * define.treeBlockHeight;
+    let y2 = y1;
+
+    return new Line(x1, y1, x2, y2);
+  }
+}
+
+class VerticalLine {
+  constructor(idxX, idxY, treeNum) {
+    this.line = LineFactory.createVerticalLine(idxX, idxY, treeNum);
   }
 
   draw(ctx, drawRatio) {
     ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.x, this.y + (define.treeBlockHeight * drawRatio));
+    ctx.moveTo(this.line.x, this.line.y);
+    ctx.lineTo(this.line.x, this.line.y + (this.line.gapY * drawRatio));
     ctx.stroke();
   }
 }
 
 class HorizontalLine {
-  constructor(xIdx, yIdx, treeNum) {
-    const gap = define.canvasWidth / treeNum;
-    const offset = gap * 0.5;
-    this.xl = (xIdx * gap + offset);
-    this.xr = ((xIdx + 1) * gap + offset);
-    this.y = (yIdx + 1) * define.treeBlockHeight;
-    this.gap = gap;
+  constructor(idxX, idxY, treeNum) {
+    this.line = LineFactory.createHorizontalLine(idxX, idxY, treeNum);
   }
 
   draw(ctx, drawRatio) {
     ctx.beginPath();
-    ctx.moveTo(this.xl, this.y);
-    ctx.lineTo(this.xl + (this.gap * drawRatio), this.y);
+    ctx.moveTo(this.line.x, this.line.y);
+    ctx.lineTo(this.line.x + (this.line.gapX * drawRatio), this.line.y);
     ctx.stroke();
   }
 }
