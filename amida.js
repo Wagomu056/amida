@@ -62,6 +62,8 @@ class LineDrawer {
     this.currentY = this.startY;
     this.dirX = LineDrawer.getDir(this.startX, this.goalX);
     this.dirY = LineDrawer.getDir(this.startY, this.goalY);
+
+    this.isVertical = (this.currentX === this.goalX);
   }
 
   draw(ctx) {
@@ -97,8 +99,16 @@ class LineDrawer {
 
     ctx.stroke();
 
-    this.startX = this.currentX + (1 * this.dirX * -1);
-    this.startY = this.currentY + (1 * this.dirY * -1);
+    // 縦描画は差分だけ描いたほうがギザギザにならない
+    if (this.isVertical) {
+      this.startX = this.currentX + (1 * this.dirX * -1);
+      this.startY = this.currentY + (1 * this.dirY * -1);
+    }
+
+    // 描き切ったときに、改めてstartからgoalまで描画することでギザギザしないようにする
+    if (isFinish) {
+      this.draw(ctx);
+    }
 
     return isFinish;
   }
