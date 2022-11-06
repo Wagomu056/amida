@@ -45,40 +45,88 @@ class LineFactory {
 }
 
 class LineDrawer {
+  static getDir(from, to) {
+    if (from === to) { return 0; }
+
+    let val = to - from;
+    if (val > 0) { return 1; }
+    else { return -1; }
+  }
+
   constructor(line) {
     this.line = line;
-    this.gapX = line.x2 - line.x1;
-    this.gapY = line.y2 - line.y1;
+  }
+
+  init() {
+    this.currentX = this.startX;
+    this.currentY = this.startY;
+    this.dirX = LineDrawer.getDir(this.startX, this.goalX);
+    this.dirY = LineDrawer.getDir(this.startY, this.goalY);
+  }
+
+  draw(ctx) {
+    ctx.beginPath();
+    ctx.moveTo(this.line.x1, this.line.y1);
+    ctx.lineTo(this.line.x2, this.line.y2);
+    ctx.stroke();
+  }
+
+  checkArrive(current, goal, speed) {
+    let diff = Math.abs(goal - current);
+    return (diff < speed);
+  }
+
+  drawBySeed(ctx, speed) {
+    ctx.beginPath();
+
+    let isFinish = false;
+    this.currentX += speed * this.dirX;
+    if (this.dirX !== 0 && this.checkArrive(this.currentX, this.goalX, speed)) {
+      this.currentX = this.goalX;
+      isFinish = true;
+    }
+
+    this.currentY += speed * this.dirY;
+    if (this.dirY !== 0 && this.checkArrive(this.currentY, this.goalY, speed)) {
+      this.currentY = this.goalY;
+      isFinish = true;
+    }
+
+    ctx.moveTo(this.startX, this.startY);
+    ctx.lineTo(this.currentX, this.currentY);
+
+    ctx.stroke();
+
+    this.startX = this.currentX + (1 * this.dirX * -1);
+    this.startY = this.currentY + (1 * this.dirY * -1);
+
+    return isFinish;
   }
 }
 
 class NormalLineDrawer extends LineDrawer {
-  draw(ctx, drawRatio) {
-    ctx.beginPath();
+  constructor(line) {
+    super(line);
 
-    ctx.moveTo(this.line.x1, this.line.y1);
-    ctx.lineTo(
-      this.line.x1 + (this.gapX * drawRatio),
-      this.line.y1 + (this.gapY * drawRatio)
-    );
+    this.startX = line.x1;
+    this.startY = line.y1;
+    this.goalX = line.x2;
+    this.goalY = line.y2;
 
-    ctx.stroke();
+    this.init();
   }
 }
 
 class ReverseLineDrawer extends LineDrawer {
-  draw(ctx, drawRatio) {
-    ctx.beginPath();
+  constructor(line) {
+    super(line);
 
-    let x = this.line.x2;
-    let y = this.line.y2;
-    ctx.moveTo(x, y);
-    ctx.lineTo(
-      x - (this.gapX * drawRatio),
-      y - (this.gapY * drawRatio)
-    );
+    this.startX = line.x2;
+    this.startY = line.y2;
+    this.goalX = line.x1;
+    this.goalY = line.y1;
 
-    ctx.stroke();
+    this.init();
   }
 }
 
@@ -163,7 +211,6 @@ function setBorderColor(contentId, idx, color) {
 
     let children = contentList.childNodes;
     for (let i = 0; i < children.length; i++) {
-        console.log(children[i]);
     }
 
     for (let i = 0; i < children.length; i++) {
@@ -204,7 +251,7 @@ function drawVerticalLine(ctx, verticalLines) {
     ctx.strokeStyle = 'black';
     for (const line of verticalLines) {
       for (const lineBlock of line) {
-        new NormalLineDrawer(lineBlock, false).draw(ctx, 1.0);
+        new NormalLineDrawer(lineBlock, false).draw(ctx);
       }
     }
 }
@@ -240,7 +287,7 @@ function drawHorizontalLines(ctx, borders) {
     let yCount = borders[x].length;
     for (let y = 0; y < yCount; y++) {
       if (borders[x][y] !== null) {
-        new NormalLineDrawer(borders[x][y]).draw(ctx, 1.0);
+        new NormalLineDrawer(borders[x][y]).draw(ctx);
       }
     }
   }
@@ -248,7 +295,7 @@ function drawHorizontalLines(ctx, borders) {
 
 function createTraceLineDrawers(ctx, verticalLines, horizontalLines, startX) {
   ctx.strokeStyle = LineColors[(startX % LineColors.length)];
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 5;
 
   let lastVIdx = verticalLines.length - 1;
   let maxHorizontalCount = define.treeBlockCount - 1;
@@ -281,21 +328,15 @@ function createTraceLineDrawers(ctx, verticalLines, horizontalLines, startX) {
 }
 
 var currentDrawingIdx;
-var currentDrawingRatio;
 var routeLines;
 function drawTraceLineLoop() {
   if (currentDrawingIdx >= routeLines.length ) {
     return;
   }
 
-  currentDrawingRatio += 0.3;
-  if (currentDrawingRatio >= 1.0) {
-    currentDrawingRatio = 1.0;
-  }
-  routeLines[currentDrawingIdx].draw(ctx, currentDrawingRatio);
+  let isFinish = routeLines[currentDrawingIdx].drawBySeed(ctx, 5);
 
-  if (currentDrawingRatio === 1.0) {
-    currentDrawingRatio = 0.0;
+  if (isFinish) {
     currentDrawingIdx += 1;
   }
 
@@ -308,7 +349,6 @@ function startDrawTraceLine(startIdx) {
   let traceInfo = createTraceLineDrawers(ctx, verticalLines, horizontalLines, startIdx);
 
   currentDrawingIdx = 0;
-  currentDrawingRatio = 0.0;
   routeLines = traceInfo.routeLines;
   window.requestAnimationFrame(drawTraceLineLoop);
 
