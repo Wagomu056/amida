@@ -341,6 +341,9 @@ var currentDrawingIdx;
 var routeLines;
 function drawTraceLineLoop() {
   if (currentDrawingIdx >= routeLines.length ) {
+    if (onTraceEndFunction !== null) {
+      onTraceEndFunction();
+    }
     return;
   }
 
@@ -353,22 +356,31 @@ function drawTraceLineLoop() {
   window.requestAnimationFrame(drawTraceLineLoop);
 }
 
+var onTraceEndFunction = null;
+function registerOnTraceEnd(onTraceEnd) {
+  onTraceEndFunction = onTraceEnd;
+}
+
 function startDrawTraceLine(startIdx) {
   let color = LineColors[startIdx];
   setBorderColor('fromNameList', startIdx, color);
   let traceInfo = createTraceLineDrawers(ctx, verticalLines, horizontalLines, startIdx);
 
+  registerOnTraceEnd(async function(){
+    await new Promise(s => setTimeout(s, 100));
+
+    let distIdx = traceInfo.distIdx;
+    let distItem = setBorderColor('distNameList', distIdx, color);
+    if (distItem !== null) {
+      if (distItem.firstChild !== null) {
+        distItem.firstChild.classList.add('flipIn');
+      }
+    }
+  });
+
   currentDrawingIdx = 0;
   routeLines = traceInfo.routeLines;
   window.requestAnimationFrame(drawTraceLineLoop);
-
-  let distIdx = traceInfo.distIdx;
-  let distItem = setBorderColor('distNameList', distIdx, color);
-  if (distItem !== null) {
-    if (distItem.firstChild !== null) {
-      distItem.firstChild.classList.add('flipIn');
-    }
-  }
 }
 
 // main ----------
