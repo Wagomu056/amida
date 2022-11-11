@@ -361,7 +361,13 @@ function registerOnTraceEnd(onTraceEnd) {
   onTraceEndFunction = onTraceEnd;
 }
 
+var isTracing = false;
 function startDrawTraceLine(startIdx) {
+  if (isTracing) {
+    return;
+  }
+
+  isTracing = true;
   let color = LineColors[startIdx];
   setBorderColor('fromNameList', startIdx, color);
   let traceInfo = createTraceLineDrawers(ctx, verticalLines, horizontalLines, startIdx);
@@ -376,6 +382,11 @@ function startDrawTraceLine(startIdx) {
         distItem.firstChild.classList.add('flipIn');
       }
     }
+
+    // @todo
+    // wait for finish anim
+    await new Promise(s => setTimeout(s, 1000));
+    isTracing = false;
   });
 
   currentDrawingIdx = 0;
