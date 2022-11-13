@@ -193,6 +193,12 @@ function addDistNameList(nameNum, parameters) {
       return;
     }
 
+    let indexes = [];
+    for (let i = 0; i < nameNum; i++) {
+      indexes[i] = i;
+    }
+    shuffle(indexes);
+
     // add items that is dist name
     for (let i = 0; i < nameNum; i++) {
       let p = document.createElement('p');
@@ -200,7 +206,7 @@ function addDistNameList(nameNum, parameters) {
 
       let tp = document.createElement('p');
       tp.classList.add('name');
-      const keyName = 'name' + i;
+      const keyName = 'name' + indexes[i];
       tp.textContent = parameters[keyName];
       tp.style.transform = "rotateX(-90deg)";
       p.appendChild(tp);
