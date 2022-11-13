@@ -266,26 +266,49 @@ function drawVerticalLine(ctx, verticalLines) {
     }
 }
 
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
 function createHorizontalLines(xNum, yNum, nameNum) {
   let borders = [];
   for (let x = 0; x < xNum; x++) {
     borders[x] = [];
     for (let y = 0; y < yNum; y++) {
-      // If next to left, exclude.
-      if (x > 0) {
-        if (borders[x - 1][y] !== null) {
-          borders[x][y] = null;
-          continue;
-        }
+        borders[x][y] = null;
+    }
+
+    let indexes = [];
+    for (let y = 0; y < yNum; y++) {
+      if (x > 0 && borders[x - 1][y] !== null) {
+        continue;
+      }
+      if (indexes.includes(y - 1) || indexes.includes(y - 2)) {
+        continue;
+      }
+      indexes.push(y);
+    }
+    shuffle(indexes);
+
+    let lineNum = 2 + getRandomInt(2);
+    while (lineNum > 0) {
+      if (indexes.length < lineNum) {
+        break;
       }
 
-      if (Math.random() <= 0.2) {
-        borders[x][y] = LineFactory.createHorizontalLine(x, y, nameNum);
-      } else {
-        borders[x][y] = null;
-      }
+      let y = indexes.pop();
+      borders[x][y] = LineFactory.createHorizontalLine(x, y, nameNum);
+      lineNum -= 1;
     }
   }
+
   return borders;
 }
 
