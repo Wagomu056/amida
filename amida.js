@@ -175,7 +175,17 @@ function changeTargetName(name) {
     }
 
     let childNodes = targetNameContents.childNodes;
-    childNodes[3].textContent = name;
+    childNodes[3].childNodes[0].textContent = name;
+    playAnimation(childNodes[3].childNodes[0], "flash");
+}
+
+function playAnimation(element, animName) {
+  element.className = "";
+  window.requestAnimationFrame(function(time) {
+    window.requestAnimationFrame(function(time) {
+      element.className = animName;
+    });
+  });
 }
 
 // name list ---------------
@@ -468,7 +478,7 @@ function startDrawTraceLine(startIdx, nameCollector) {
 
     // @todo
     // wait for finish anim
-    await new Promise(s => setTimeout(s, 1000));
+    await new Promise(s => setTimeout(s, 2000));
     isTracing = false;
     nameCollector.next();
     changeTargetName(nameCollector.getCurrent());

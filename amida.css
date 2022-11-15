@@ -47,6 +47,23 @@ p.name {
   }
 }
 
+.flash {
+  animation-name: flashAnim;
+  animation-fill-mode: forwards;
+  animation-duration: 0.5s;
+  animation-timing-function: linear;
+  animation-iteration-count: 5;
+}
+
+@keyframes flashAnim {
+  0%,100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 button.item {
   border-radius: 50px;
   background-color: #33B0DD;
