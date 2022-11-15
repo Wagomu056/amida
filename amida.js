@@ -167,24 +167,75 @@ function getURLParameters() {
   return result;
 }
 
+// title
+function changeTargetName(name) {
+    const targetNameContents = document.getElementById('target_name_contents');
+    if (targetNameContents === null) {
+      return;
+    }
+
+    let childNodes = targetNameContents.childNodes;
+    childNodes[3].textContent = name;
+}
+
 // name list ---------------
-function addSourceNameList(nameNum, parameters) {
+class NameCollector {
+  constructor(parameters) {
+    this.nameNum = Object.keys(parameters).length;
+    let names = [];
+    for (let i = 0; i < this.nameNum; i++) {
+      const keyName = 'name' + i;
+      names[i] = parameters[keyName];
+    }
+    this.names = names;
+
+    this.currentIdx = 0;
+  }
+
+  getCurrent() {
+    return this.names[this.currentIdx];
+  }
+
+  getNameNum() {
+    return this.nameNum;
+  }
+
+  next() {
+    this.currentIdx += 1;
+    if (this.currentIdx >= this.nameNum) {
+      this.currentIdx = this.nameNum - 1;
+    }
+  }
+}
+
+function addSourceNameList(nameCollector) {
     const fromNameListElement = document.getElementById('fromNameList');
     if (fromNameListElement === null) {
       return;
     }
 
     // add items that is source name
+    let nameNum = nameCollector.getNameNum();
     for (let i = 0; i < nameNum; i++) {
       let button = document.createElement('button');
       button.classList.add('item');
-      const keyName = 'name' + i;
-      button.textContent = parameters[keyName];
+      button.textContent = "　　　　　";
 
-      button.addEventListener('click', () => { startDrawTraceLine(i); });
+      button.addEventListener('click', () => { 
+        startDrawTraceLine(i, nameCollector);
+      });
 
       fromNameListElement.appendChild(button);
     }
+}
+
+function changeSourceNameList(idx, name) {
+    const fromNameListElement = document.getElementById('fromNameList');
+    if (fromNameListElement === null) {
+      return;
+    }
+
+    fromNameListElement.childNodes[idx + 1].textContent = name;
 }
 
 function addDistNameList(nameNum, parameters) {
@@ -197,6 +248,7 @@ function addDistNameList(nameNum, parameters) {
     for (let i = 0; i < nameNum; i++) {
       indexes[i] = i;
     }
+    shuffle(indexes);
     shuffle(indexes);
 
     // add items that is dist name
@@ -391,10 +443,12 @@ function registerOnTraceEnd(onTraceEnd) {
 }
 
 var isTracing = false;
-function startDrawTraceLine(startIdx) {
+function startDrawTraceLine(startIdx, nameCollector) {
   if (isTracing) {
     return;
   }
+
+  changeSourceNameList(startIdx, nameCollector.getCurrent());
 
   isTracing = true;
   let color = LineColors[startIdx];
@@ -416,6 +470,8 @@ function startDrawTraceLine(startIdx) {
     // wait for finish anim
     await new Promise(s => setTimeout(s, 1000));
     isTracing = false;
+    nameCollector.next();
+    changeTargetName(nameCollector.getCurrent());
   });
 
   currentDrawingIdx = 0;
@@ -432,7 +488,9 @@ function main()
     return;
   }
 
-  addSourceNameList(nameNum, parameters);
+  let nameCollector = new NameCollector(parameters);
+  changeTargetName(nameCollector.getCurrent());
+  addSourceNameList(nameCollector);
   addDistNameList(nameNum, parameters);
 
   const canvas = document.getElementById('canvas');

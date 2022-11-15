@@ -1,3 +1,15 @@
+.target_name_contents {
+  display: flex;
+  justify-content: flex-start;
+  margin-left: 30px;
+}
+
+.target_name {
+  margin-right: 15px;
+  font-family: sans-serif;
+  color: #717375;
+}
+
 .contents {
   display: flex;
   flex-wrap: wrap;
