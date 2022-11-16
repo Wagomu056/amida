@@ -248,6 +248,14 @@ function changeSourceNameList(idx, name) {
     fromNameListElement.childNodes[idx + 1].textContent = name;
 }
 
+function isAlreadyNamed(idx) {
+    const fromNameListElement = document.getElementById('fromNameList');
+    if (fromNameListElement === null) {
+      return false;
+    }
+    return (fromNameListElement.childNodes[idx + 1].textContent !== "　　　　　");
+}
+
 function addDistNameList(nameNum, parameters) {
     const distNameListElement = document.getElementById('distNameList');
     if (distNameListElement === null) {
@@ -311,7 +319,8 @@ const LineColors = [
   '#CF0CF0',
   '#F0CF0C',
   '#0CF0CF',
-  '#F30F30'
+  '#F30F30',
+  '#4B0FFC',
 ];
 
 function createVerticalLines(nameNum) {
@@ -455,6 +464,10 @@ function registerOnTraceEnd(onTraceEnd) {
 var isTracing = false;
 function startDrawTraceLine(startIdx, nameCollector) {
   if (isTracing) {
+    return;
+  }
+
+  if (isAlreadyNamed(startIdx)) {
     return;
   }
 
