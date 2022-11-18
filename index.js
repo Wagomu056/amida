@@ -7,6 +7,7 @@ function addName() {
     p.appendChild(document.createTextNode(nameText));
 
     const nameList = document.getElementById("nameList");
+    nameList.classList.add("name_item");
     nameList.appendChild(p);
 
     nameTextElement.value = '';
