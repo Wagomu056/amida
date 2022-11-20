@@ -256,18 +256,25 @@ function isAlreadyNamed(idx) {
     return (fromNameListElement.childNodes[idx + 1].textContent !== "　　　　　");
 }
 
-function addDistNameList(nameNum, parameters) {
-    const distNameListElement = document.getElementById('distNameList');
-    if (distNameListElement === null) {
-      return;
-    }
-
+function createDistNameList(nameNum, parameters, distNameList) {
     let indexes = [];
     for (let i = 0; i < nameNum; i++) {
       indexes[i] = i;
     }
     shuffle(indexes);
     shuffle(indexes);
+
+    for (let i = 0; i < nameNum; i++) {
+      const keyName = 'name' + indexes[i];
+      distNameList[i] = parameters[keyName];
+    }
+}
+
+function addDistNameList(nameNum) {
+    const distNameListElement = document.getElementById('distNameList');
+    if (distNameListElement === null) {
+      return;
+    }
 
     // add items that is dist name
     for (let i = 0; i < nameNum; i++) {
@@ -276,8 +283,7 @@ function addDistNameList(nameNum, parameters) {
 
       let tp = document.createElement('p');
       tp.classList.add('name');
-      const keyName = 'name' + indexes[i];
-      tp.textContent = parameters[keyName];
+      tp.textContent = "　　　　　";
       tp.style.transform = "rotateX(-90deg)";
       p.appendChild(tp);
 
@@ -486,6 +492,7 @@ function startDrawTraceLine(startIdx, nameCollector) {
     if (distItem !== null) {
       if (distItem.firstChild !== null) {
         distItem.firstChild.classList.add('flipIn');
+        distItem.firstChild.textContent = distNameList[distIdx];
       }
     }
 
@@ -503,6 +510,7 @@ function startDrawTraceLine(startIdx, nameCollector) {
 }
 
 // main ----------
+var distNameList = [];
 function main()
 {
   const parameters = getURLParameters();
@@ -514,7 +522,9 @@ function main()
   let nameCollector = new NameCollector(parameters);
   changeTargetName(nameCollector.getCurrent());
   addSourceNameList(nameCollector);
-  addDistNameList(nameNum, parameters);
+
+  createDistNameList(nameNum, parameters, distNameList);
+  addDistNameList(nameNum);
 
   const canvas = document.getElementById('canvas');
   if (!canvas || !canvas.getContext){
