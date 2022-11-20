@@ -190,8 +190,9 @@ function playAnimation(element, animName) {
 
 // name list ---------------
 class NameCollector {
-  constructor(parameters) {
+  constructor(parameters, isRandom) {
     this.nameNum = Object.keys(parameters).length;
+
     let names = [];
     for (let i = 0; i < this.nameNum; i++) {
       const keyName = 'name' + i;
@@ -199,11 +200,37 @@ class NameCollector {
     }
     this.names = names;
 
+    // to change opener order to random
+    this.openIndexes = [];
+    for (let i = 0; i < this.nameNum; i++) {
+      this.openIndexes[i] = i;
+    }
+
+    if (isRandom) {
+      shuffle(names);
+      shuffle(names);
+      shuffle(this.openIndexes);
+      shuffle(this.openIndexes);
+    }
+
+    console.log("srcNames");
+    for (let i = 0; i < this.nameNum; i++) {
+      console.log(this.names[i]);
+    }
+
     this.currentIdx = 0;
   }
 
-  getCurrent() {
-    return this.names[this.currentIdx];
+  getCurrentIndex() {
+    return this.openIndexes[this.currentIdx];
+  }
+
+  getCurrentName() {
+    return this.names[this.getCurrentIndex()];
+  }
+
+  getNamebyIndex(idx) {
+    return this.names[idx];
   }
 
   getNameNum() {
@@ -218,7 +245,7 @@ class NameCollector {
   }
 }
 
-function addSourceNameList(nameCollector) {
+function addSourceNameList(nameCollector, isRealMode) {
     const fromNameListElement = document.getElementById('fromNameList');
     if (fromNameListElement === null) {
       return;
@@ -232,7 +259,7 @@ function addSourceNameList(nameCollector) {
       button.textContent = "　　　　　";
 
       button.addEventListener('click', () => { 
-        startDrawTraceLine(i, nameCollector);
+        startDrawTraceLine(i, nameCollector, isRealMode);
       });
 
       fromNameListElement.appendChild(button);
@@ -243,7 +270,7 @@ function changeSourceNameList(idx, name) {
     const fromNameListElement = document.getElementById('fromNameList');
     if (fromNameListElement === null) {
       return;
-    }
+    };
 
     fromNameListElement.childNodes[idx + 1].textContent = name;
 }
@@ -268,6 +295,21 @@ function createDistNameList(nameNum, parameters, distNameList) {
       const keyName = 'name' + indexes[i];
       distNameList[i] = parameters[keyName];
     }
+}
+
+function createDistNameByNameCollector(nameCollector, distNameList) {
+  let count = nameCollector.getNameNum();
+  // 1 ~ (count - 1)
+  let offset = 1 + getRandomInt(count - 2);
+  for (let i = 0; i < count; i++) {
+    let idx = ((i + offset) % count);
+    distNameList[i] = nameCollector.getNamebyIndex(idx);
+  }
+
+  console.log("DistNames");
+  for (let i = 0; i < count; i++) {
+    console.log(distNameList[i]);
+  }
 }
 
 function addDistNameList(nameNum) {
@@ -468,7 +510,7 @@ function registerOnTraceEnd(onTraceEnd) {
 }
 
 var isTracing = false;
-function startDrawTraceLine(startIdx, nameCollector) {
+function startDrawTraceLine(startIdx, nameCollector, isRealMode) {
   if (isTracing) {
     return;
   }
@@ -477,7 +519,7 @@ function startDrawTraceLine(startIdx, nameCollector) {
     return;
   }
 
-  changeSourceNameList(startIdx, nameCollector.getCurrent());
+  changeSourceNameList(startIdx, nameCollector.getCurrentName());
 
   isTracing = true;
   let color = LineColors[startIdx];
@@ -489,11 +531,19 @@ function startDrawTraceLine(startIdx, nameCollector) {
 
     let distIdx = traceInfo.distIdx;
     let distItem = setBorderColor('distNameList', distIdx, color);
-    if (distItem !== null) {
-      if (distItem.firstChild !== null) {
-        distItem.firstChild.classList.add('flipIn');
-        distItem.firstChild.textContent = distNameList[distIdx];
-      }
+    if (distItem === null) {
+      return;
+    }
+    if (distItem.firstChild === null) {
+      return;
+    }
+
+    distItem.firstChild.classList.add('flipIn');
+    if (isRealMode) {
+      distItem.firstChild.textContent = distNameList[distIdx];
+    }
+    else {
+      distItem.firstChild.textContent = distNameList[nameCollector.getCurrentIndex()];
     }
 
     // @todo
@@ -501,7 +551,7 @@ function startDrawTraceLine(startIdx, nameCollector) {
     await new Promise(s => setTimeout(s, 2000));
     isTracing = false;
     nameCollector.next();
-    changeTargetName(nameCollector.getCurrent());
+    changeTargetName(nameCollector.getCurrentName());
   });
 
   currentDrawingIdx = 0;
@@ -511,6 +561,7 @@ function startDrawTraceLine(startIdx, nameCollector) {
 
 // main ----------
 var distNameList = [];
+const isRealMode = true;
 function main()
 {
   const parameters = getURLParameters();
@@ -519,11 +570,16 @@ function main()
     return;
   }
 
-  let nameCollector = new NameCollector(parameters);
-  changeTargetName(nameCollector.getCurrent());
+  let nameCollector = new NameCollector(parameters, true);
+  changeTargetName(nameCollector.getCurrentName());
   addSourceNameList(nameCollector);
 
-  createDistNameList(nameNum, parameters, distNameList);
+  if (isRealMode) {
+    createDistNameList(nameNum, parameters, distNameList);
+  }
+  else {
+    createDistNameByNameCollector(nameCollector, distNameList);
+  }
   addDistNameList(nameNum);
 
   const canvas = document.getElementById('canvas');
