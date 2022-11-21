@@ -561,7 +561,7 @@ function startDrawTraceLine(startIdx, nameCollector, isRealMode) {
 
 // main ----------
 var distNameList = [];
-const isRealMode = true;
+const isRealMode = false;
 function main()
 {
   const parameters = getURLParameters();
