@@ -245,10 +245,13 @@ class NameCollector {
   }
 
   next() {
-    this.currentIdx += 1;
-    if (this.currentIdx >= this.nameNum) {
-      this.currentIdx = this.nameNum - 1;
+    if (!this.isEnd()) {
+      this.currentIdx += 1;
     }
+  }
+
+  isEnd() {
+    return (this.currentIdx === this.nameNum - 1);
   }
 }
 
@@ -557,8 +560,13 @@ function startDrawTraceLine(startIdx, nameCollector, isRealMode) {
     // wait for finish anim
     await new Promise(s => setTimeout(s, 2000));
     isTracing = false;
-    nameCollector.next();
-    changeTargetName(nameCollector.getCurrentName());
+    if (nameCollector.isEnd()) {
+      changeTargetName("End");
+    }
+    else {
+      nameCollector.next();
+      changeTargetName(nameCollector.getCurrentName());
+    }
   });
 
   currentDrawingIdx = 0;
