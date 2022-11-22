@@ -191,7 +191,14 @@ function playAnimation(element, animName) {
 // name list ---------------
 class NameCollector {
   constructor(parameters, isRandom) {
-    this.nameNum = Object.keys(parameters).length;
+    this.nameNum = 0;
+    while(true) {
+      let key = "name" + this.nameNum;
+      if (!(key in parameters)) {
+        break;
+      }
+      this.nameNum++;
+    }
 
     let names = [];
     for (let i = 0; i < this.nameNum; i++) {
@@ -561,16 +568,21 @@ function startDrawTraceLine(startIdx, nameCollector, isRealMode) {
 
 // main ----------
 var distNameList = [];
-const isRealMode = false;
+var isRealMode = false;
 function main()
 {
   const parameters = getURLParameters();
-  const nameNum = Object.keys(parameters).length;
+  if ("isRealMode" in parameters) {
+    let realModeVal = Number(parameters["isRealMode"]);
+    isRealMode = (realModeVal > 0);
+  }
+
+  let nameCollector = new NameCollector(parameters, true);
+  const nameNum = nameCollector.getNameNum();
   if (nameNum < 2) {
     return;
   }
 
-  let nameCollector = new NameCollector(parameters, true);
   changeTargetName(nameCollector.getCurrentName());
   addSourceNameList(nameCollector);
 
