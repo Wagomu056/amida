@@ -1,5 +1,6 @@
 'use strict'
 
+import { ArrivalNameBox } from './arrival-name-box.js';
 import { NameCollector } from './name-collector.js';
 import { StartingNameButton } from './starting-name-button.js';
 import { shuffle, getRandomInt, playAnimation } from "./utils.js";
@@ -183,36 +184,20 @@ function setOpenerNameTitle(name) {
     playAnimation(childNodes[3].childNodes[0], "flash");
 }
 
-function addStartingNameButton(nameCollector) {
+function createStartingNameButton(nameCollector, arrivalNameBox) {
   let startingNameButton = new StartingNameButton(
     'fromNameList', nameCollector, LINE_COLORS);
 
   let onClickCallback = function(startIdx) {
     startingNameButton.setIsAllowClick(false);
 
-    let color = LINE_COLORS[startIdx];
     let traceInfo = createTraceLineDrawers(ctx, verticalLines, horizontalLines, startIdx);
 
-    registerOnTraceEnd(async function () {
+    onTraceEndFunction = async function() {
       await new Promise(s => setTimeout(s, 100));
 
       let distIdx = traceInfo.distIdx;
-      let distItem = setBorderColor('distNameList', distIdx, color);
-      if (distItem === null) {
-        return;
-      }
-      if (distItem.firstChild === null) {
-        return;
-      }
-
-      distItem.firstChild.classList.add('flipIn');
-      //if (isRealMode) {
-      if (false) {
-        distItem.firstChild.textContent = distNameList[distIdx];
-      }
-      else {
-        distItem.firstChild.textContent = distNameList[nameCollector.getCurrentOpenerNameIndex()];
-      }
+      arrivalNameBox.open(distIdx, LINE_COLORS[startIdx]);
 
       // @todo
       // wait for finish anim
@@ -226,7 +211,7 @@ function addStartingNameButton(nameCollector) {
         nameCollector.nextOpener();
         setOpenerNameTitle(nameCollector.getCurrentOpenerName());
       }
-    });
+    };
 
     currentDrawingIdx = 0;
     routeLines = traceInfo.routeLines;
@@ -236,80 +221,12 @@ function addStartingNameButton(nameCollector) {
   startingNameButton.addButtons(onClickCallback);
 }
 
-function createDistNameList(nameNum, parameters, distNameList) {
-    let indexes = [];
-    for (let i = 0; i < nameNum; i++) {
-      indexes[i] = i;
-    }
-    shuffle(indexes);
-    shuffle(indexes);
+function createArrivalNameBox(nameCollector, isShuffle) {
+  let arrivalNameBox = new ArrivalNameBox(
+    'distNameList', nameCollector, LINE_COLORS, isShuffle);
+  arrivalNameBox.addBoxes();
 
-    for (let i = 0; i < nameNum; i++) {
-      const keyName = 'name' + indexes[i];
-      distNameList[i] = parameters[keyName];
-    }
-}
-
-function createDistNameByNameCollector(nameCollector, distNameList) {
-  let count = nameCollector.getNameNum();
-  // 1 ~ (count - 1)
-  let offset = 1 + getRandomInt(count - 2);
-  for (let i = 0; i < count; i++) {
-    let idx = ((i + offset) % count);
-    distNameList[i] = nameCollector.getName(idx);
-  }
-
-  console.log("DistNames");
-  for (let i = 0; i < count; i++) {
-    console.log(distNameList[i]);
-  }
-}
-
-function addDistNameList(nameNum) {
-    const distNameListElement = document.getElementById('distNameList');
-    if (distNameListElement === null) {
-      return;
-    }
-
-    // add items that is dist name
-    for (let i = 0; i < nameNum; i++) {
-      let p = document.createElement('p');
-      p.classList.add('item');
-
-      let tp = document.createElement('p');
-      tp.classList.add('name');
-      tp.textContent = "　　　　　";
-      tp.style.transform = "rotateX(-90deg)";
-      p.appendChild(tp);
-
-      distNameListElement.appendChild(p);
-    }
-}
-
-function setBorderColor(contentId, idx, color) {
-    const contentList = document.getElementById(contentId);
-    if (contentList === null) {
-      return null;
-    }
-
-    if (contentList.hasChildNodes === false) {
-      return null;
-    }
-
-    let children = contentList.childNodes;
-    for (let i = 0; i < children.length; i++) {
-    }
-
-    for (let i = 0; i < children.length; i++) {
-      if (i === idx) {
-        // idx 0 is "text"
-        children[i + 1].style.border = 'solid';
-        children[i + 1].style.borderColor = color;
-        return children[i + 1];
-      }
-    }
-
-    return null;
+  return arrivalNameBox;
 }
 
 // draw line ---------------
@@ -429,6 +346,7 @@ function createTraceLineDrawers(ctx, verticalLines, horizontalLines, startX) {
 
 var currentDrawingIdx;
 var routeLines;
+var onTraceEndFunction = null;
 function drawTraceLineLoop() {
   if (currentDrawingIdx >= routeLines.length ) {
     if (onTraceEndFunction !== null) {
@@ -446,17 +364,11 @@ function drawTraceLineLoop() {
   window.requestAnimationFrame(drawTraceLineLoop);
 }
 
-var onTraceEndFunction = null;
-function registerOnTraceEnd(onTraceEnd) {
-  onTraceEndFunction = onTraceEnd;
-}
-
 // main ----------
-var distNameList = [];
-var isRealMode = false;
 function main()
 {
   const parameters = getURLParameters();
+  let isRealMode = false;
   if ("isRealMode" in parameters) {
     let realModeVal = Number(parameters["isRealMode"]);
     isRealMode = (realModeVal > 0);
@@ -469,15 +381,10 @@ function main()
   }
 
   setOpenerNameTitle(nameCollector.getCurrentOpenerName());
-  addStartingNameButton(nameCollector);
 
-  if (isRealMode) {
-    createDistNameList(nameNum, parameters, distNameList);
-  }
-  else {
-    createDistNameByNameCollector(nameCollector, distNameList);
-  }
-  addDistNameList(nameNum);
+  let isShuffle = isRealMode;
+  let arrivalNameBox = createArrivalNameBox(nameCollector, isShuffle);
+  createStartingNameButton(nameCollector, arrivalNameBox);
 
   const canvas = document.getElementById('canvas');
   if (!canvas || !canvas.getContext){
