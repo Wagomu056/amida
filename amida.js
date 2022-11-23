@@ -16,6 +16,99 @@ Object.defineProperty(define, 'treeBlockCount', {
   value: 15, writable: false
 });
 
+const LINE_COLORS = [
+  '#FC0Fc0',
+  '#C0Fc0F',
+  '#0FC0FC',
+  '#CF0CF0',
+  '#F0CF0C',
+  '#0CF0CF',
+  '#F30F30',
+  '#4B0FFC',
+];
+
+// get parameters ---------------
+function getURLParameters() {
+  if (document.location.search.length === 0) {
+    console.log("URL paramer is zero");
+    return null;
+  }
+
+  var query = document.location.search.substring(1);
+  var parameters = query.split('&');
+
+  var result = new Object();
+  for (var i = 0; i < parameters.length; i++) {
+    var element = parameters[i].split('=');
+
+    var paramName = decodeURIComponent(element[0]);
+    var paramValue = decodeURIComponent(element[1]);
+
+    result[paramName] = decodeURIComponent(paramValue);
+  }
+  return result;
+}
+
+// title
+function setOpenerNameTitle(name) {
+    const targetNameContents = document.getElementById('target_name_contents');
+    if (targetNameContents === null) {
+      return;
+    }
+
+    let childNodes = targetNameContents.childNodes;
+    childNodes[3].childNodes[0].textContent = name;
+    playAnimation(childNodes[3].childNodes[0], "flash");
+}
+
+// starting name button
+function createStartingNameButton(nameCollector, arrivalNameBox) {
+  let startingNameButton = new StartingNameButton(
+    'fromNameList', nameCollector, LINE_COLORS);
+
+  let onClickCallback = function(startIdx) {
+    startingNameButton.setIsAllowClick(false);
+
+    let traceInfo = createTraceLineDrawers(ctx, verticalLines, horizontalLines, startIdx);
+
+    onTraceEndFunction = async function() {
+      await new Promise(s => setTimeout(s, 100));
+
+      let distIdx = traceInfo.distIdx;
+      arrivalNameBox.open(distIdx, LINE_COLORS[startIdx]);
+
+      // @todo
+      // wait for finish anim
+      await new Promise(s => setTimeout(s, 2000));
+
+      startingNameButton.setIsAllowClick(true);
+      if (nameCollector.isEndOpener()) {
+        setOpenerNameTitle("End");
+      }
+      else {
+        nameCollector.nextOpener();
+        setOpenerNameTitle(nameCollector.getCurrentOpenerName());
+      }
+    };
+
+    currentDrawingIdx = 0;
+    routeLines = traceInfo.routeLines;
+    window.requestAnimationFrame(drawTraceLineLoop);
+  };
+  
+  startingNameButton.addButtons(onClickCallback);
+}
+
+// arrival name box
+function createArrivalNameBox(nameCollector, isShuffle) {
+  let arrivalNameBox = new ArrivalNameBox(
+    'distNameList', nameCollector, LINE_COLORS, isShuffle);
+  arrivalNameBox.addBoxes();
+
+  return arrivalNameBox;
+}
+
+// line core
 class Line {
   constructor(x1, y1, x2, y2) {
     this.x1 = x1;
@@ -119,6 +212,7 @@ class LineDrawer {
   }
 }
 
+// line drawer
 class NormalLineDrawer extends LineDrawer {
   constructor(line) {
     super(line);
@@ -150,97 +244,7 @@ var ctx;
 var verticalLines;
 var horizontalLines;
 
-// get parameters ---------------
-function getURLParameters() {
-  if (document.location.search.length === 0) {
-    console.log("URL paramer is zero");
-    return null;
-  }
-
-  var query = document.location.search.substring(1);
-  var parameters = query.split('&');
-
-  var result = new Object();
-  for (var i = 0; i < parameters.length; i++) {
-    var element = parameters[i].split('=');
-
-    var paramName = decodeURIComponent(element[0]);
-    var paramValue = decodeURIComponent(element[1]);
-
-    result[paramName] = decodeURIComponent(paramValue);
-  }
-  return result;
-}
-
-// title
-function setOpenerNameTitle(name) {
-    const targetNameContents = document.getElementById('target_name_contents');
-    if (targetNameContents === null) {
-      return;
-    }
-
-    let childNodes = targetNameContents.childNodes;
-    childNodes[3].childNodes[0].textContent = name;
-    playAnimation(childNodes[3].childNodes[0], "flash");
-}
-
-function createStartingNameButton(nameCollector, arrivalNameBox) {
-  let startingNameButton = new StartingNameButton(
-    'fromNameList', nameCollector, LINE_COLORS);
-
-  let onClickCallback = function(startIdx) {
-    startingNameButton.setIsAllowClick(false);
-
-    let traceInfo = createTraceLineDrawers(ctx, verticalLines, horizontalLines, startIdx);
-
-    onTraceEndFunction = async function() {
-      await new Promise(s => setTimeout(s, 100));
-
-      let distIdx = traceInfo.distIdx;
-      arrivalNameBox.open(distIdx, LINE_COLORS[startIdx]);
-
-      // @todo
-      // wait for finish anim
-      await new Promise(s => setTimeout(s, 2000));
-
-      startingNameButton.setIsAllowClick(true);
-      if (nameCollector.isEndOpener()) {
-        setOpenerNameTitle("End");
-      }
-      else {
-        nameCollector.nextOpener();
-        setOpenerNameTitle(nameCollector.getCurrentOpenerName());
-      }
-    };
-
-    currentDrawingIdx = 0;
-    routeLines = traceInfo.routeLines;
-    window.requestAnimationFrame(drawTraceLineLoop);
-  };
-  
-  startingNameButton.addButtons(onClickCallback);
-}
-
-function createArrivalNameBox(nameCollector, isShuffle) {
-  let arrivalNameBox = new ArrivalNameBox(
-    'distNameList', nameCollector, LINE_COLORS, isShuffle);
-  arrivalNameBox.addBoxes();
-
-  return arrivalNameBox;
-}
-
 // draw line ---------------
-const LINE_COLORS = [
-  '#FC0Fc0',
-  '#C0Fc0F',
-  '#0FC0FC',
-  '#CF0CF0',
-  '#F0CF0C',
-  '#0CF0CF',
-  '#F30F30',
-  '#4B0FFC',
-];
-
 function createVerticalLines(nameNum) {
     let verticalLines = [];
     for (let x = 0; x < nameNum; x++) {

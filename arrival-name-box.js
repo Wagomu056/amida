@@ -46,12 +46,14 @@ export class ArrivalNameBox {
     if (box.firstChild !== null) {
       box.firstChild.classList.add('flipIn');
 
+      let nameListIdx;
       if (this.isShuffle) {
-        box.firstChild.textContent = this.arrivalNameList[idx];
+        nameListIdx = idx;
       }
       else {
-        box.firstChild.textContent = this.arrivalNameList[this.nameCollector.getCurrentOpenerNameIndex()];
+        nameListIdx = this.nameCollector.getCurrentOpenerNameIndex();
       }
+      box.firstChild.textContent = this.arrivalNameList[nameListIdx];
     }
   }
 
