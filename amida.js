@@ -102,7 +102,7 @@ function createStartingNameButton(nameCollector, arrivalNameBox) {
 // arrival name box
 function createArrivalNameBox(nameCollector, isShuffle) {
   let arrivalNameBox = new ArrivalNameBox(
-    'distNameList', nameCollector, LINE_COLORS, isShuffle);
+    'distNameList', nameCollector, isShuffle);
   arrivalNameBox.addBoxes();
 
   return arrivalNameBox;

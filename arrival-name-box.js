@@ -1,10 +1,9 @@
 import { shuffle, getRandomInt } from "./utils.js";
 
 export class ArrivalNameBox {
-  constructor(parentElementName, nameCollector, lineColors, isShuffle) {
+  constructor(parentElementName, nameCollector, isShuffle) {
     this.parentElementName = parentElementName;
     this.nameCollector = nameCollector;
-    this.lineColors = lineColors;
     this.isShuffle = isShuffle;
 
     if (isShuffle) {
