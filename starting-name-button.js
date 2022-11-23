@@ -30,7 +30,7 @@ export class StartingNameButton {
             return;
           }
 
-          button.textContent = this.nameCollector.getCurrentName();
+          button.textContent = this.nameCollector.getCurrentOpenerName();
           button.style.border = 'solid';
           button.style.borderColor = this.lineColors[i];
 

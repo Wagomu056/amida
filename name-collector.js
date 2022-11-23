@@ -1,7 +1,7 @@
 import { shuffle } from "./utils.js";
 
 export class NameCollector {
-  constructor(parameters, isRandom) {
+  constructor(parameters, isShuffle) {
     this.nameNum = 0;
     while(true) {
       let key = "name" + this.nameNum;
@@ -19,19 +19,19 @@ export class NameCollector {
     this.names = names;
 
     // to change opener order to random
-    this.openIndexes = [];
+    this.openerNameIndexes = [];
     for (let i = 0; i < this.nameNum; i++) {
-      this.openIndexes[i] = i;
+      this.openerNameIndexes[i] = i;
     }
 
-    if (isRandom) {
+    if (isShuffle) {
       shuffle(names);
       shuffle(names);
-      shuffle(this.openIndexes);
-      shuffle(this.openIndexes);
+      shuffle(this.openerNameIndexes);
+      shuffle(this.openerNameIndexes);
     }
 
-    console.log("srcNames");
+    console.log("startingNames");
     for (let i = 0; i < this.nameNum; i++) {
       console.log(this.names[i]);
     }
@@ -39,15 +39,15 @@ export class NameCollector {
     this.currentIdx = 0;
   }
 
-  getCurrentIndex() {
-    return this.openIndexes[this.currentIdx];
+  getCurrentOpenerNameIndex() {
+    return this.openerNameIndexes[this.currentIdx];
   }
 
-  getCurrentName() {
-    return this.names[this.getCurrentIndex()];
+  getCurrentOpenerName() {
+    return this.names[this.getCurrentOpenerNameIndex()];
   }
 
-  getNamebyIndex(idx) {
+  getName(idx) {
     return this.names[idx];
   }
 
@@ -55,13 +55,13 @@ export class NameCollector {
     return this.nameNum;
   }
 
-  next() {
-    if (!this.isEnd()) {
+  nextOpener() {
+    if (!this.isEndOpener()) {
       this.currentIdx += 1;
     }
   }
 
-  isEnd() {
+  isEndOpener() {
     return (this.currentIdx === this.nameNum - 1);
   }
 }

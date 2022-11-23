@@ -172,7 +172,7 @@ function getURLParameters() {
 }
 
 // title
-function changeTargetName(name) {
+function setOpenerNameTitle(name) {
     const targetNameContents = document.getElementById('target_name_contents');
     if (targetNameContents === null) {
       return;
@@ -211,7 +211,7 @@ function addStartingNameButton(nameCollector) {
         distItem.firstChild.textContent = distNameList[distIdx];
       }
       else {
-        distItem.firstChild.textContent = distNameList[nameCollector.getCurrentIndex()];
+        distItem.firstChild.textContent = distNameList[nameCollector.getCurrentOpenerNameIndex()];
       }
 
       // @todo
@@ -219,12 +219,12 @@ function addStartingNameButton(nameCollector) {
       await new Promise(s => setTimeout(s, 2000));
 
       startingNameButton.setIsAllowClick(true);
-      if (nameCollector.isEnd()) {
-        changeTargetName("End");
+      if (nameCollector.isEndOpener()) {
+        setOpenerNameTitle("End");
       }
       else {
-        nameCollector.next();
-        changeTargetName(nameCollector.getCurrentName());
+        nameCollector.nextOpener();
+        setOpenerNameTitle(nameCollector.getCurrentOpenerName());
       }
     });
 
@@ -256,7 +256,7 @@ function createDistNameByNameCollector(nameCollector, distNameList) {
   let offset = 1 + getRandomInt(count - 2);
   for (let i = 0; i < count; i++) {
     let idx = ((i + offset) % count);
-    distNameList[i] = nameCollector.getNamebyIndex(idx);
+    distNameList[i] = nameCollector.getName(idx);
   }
 
   console.log("DistNames");
@@ -468,7 +468,7 @@ function main()
     return;
   }
 
-  changeTargetName(nameCollector.getCurrentName());
+  setOpenerNameTitle(nameCollector.getCurrentOpenerName());
   addStartingNameButton(nameCollector);
 
   if (isRealMode) {
