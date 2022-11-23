@@ -1,6 +1,7 @@
 'use strict'
 
 import { NameCollector } from './name-collector.js';
+import { StartingNameButton } from './starting-name-button.js';
 import { shuffle, getRandomInt, playAnimation } from "./utils.js";
 
 const define = {};
@@ -182,42 +183,57 @@ function changeTargetName(name) {
     playAnimation(childNodes[3].childNodes[0], "flash");
 }
 
-function addSourceNameList(nameCollector, isRealMode) {
-    const fromNameListElement = document.getElementById('fromNameList');
-    if (fromNameListElement === null) {
-      return;
-    }
+function addStartingNameButton(nameCollector) {
+  let startingNameButton = new StartingNameButton(
+    'fromNameList', nameCollector, LINE_COLORS);
 
-    // add items that is source name
-    let nameNum = nameCollector.getNameNum();
-    for (let i = 0; i < nameNum; i++) {
-      let button = document.createElement('button');
-      button.classList.add('item');
-      button.textContent = "　　　　　";
+  let onClickCallback = function(startIdx) {
+    startingNameButton.setIsAllowClick(false);
 
-      button.addEventListener('click', () => { 
-        startDrawTraceLine(i, nameCollector, isRealMode);
-      });
+    let color = LINE_COLORS[startIdx];
+    let traceInfo = createTraceLineDrawers(ctx, verticalLines, horizontalLines, startIdx);
 
-      fromNameListElement.appendChild(button);
-    }
-}
+    registerOnTraceEnd(async function () {
+      await new Promise(s => setTimeout(s, 100));
 
-function changeSourceNameList(idx, name) {
-    const fromNameListElement = document.getElementById('fromNameList');
-    if (fromNameListElement === null) {
-      return;
-    };
+      let distIdx = traceInfo.distIdx;
+      let distItem = setBorderColor('distNameList', distIdx, color);
+      if (distItem === null) {
+        return;
+      }
+      if (distItem.firstChild === null) {
+        return;
+      }
 
-    fromNameListElement.childNodes[idx + 1].textContent = name;
-}
+      distItem.firstChild.classList.add('flipIn');
+      //if (isRealMode) {
+      if (false) {
+        distItem.firstChild.textContent = distNameList[distIdx];
+      }
+      else {
+        distItem.firstChild.textContent = distNameList[nameCollector.getCurrentIndex()];
+      }
 
-function isAlreadyNamed(idx) {
-    const fromNameListElement = document.getElementById('fromNameList');
-    if (fromNameListElement === null) {
-      return false;
-    }
-    return (fromNameListElement.childNodes[idx + 1].textContent !== "　　　　　");
+      // @todo
+      // wait for finish anim
+      await new Promise(s => setTimeout(s, 2000));
+
+      startingNameButton.setIsAllowClick(true);
+      if (nameCollector.isEnd()) {
+        changeTargetName("End");
+      }
+      else {
+        nameCollector.next();
+        changeTargetName(nameCollector.getCurrentName());
+      }
+    });
+
+    currentDrawingIdx = 0;
+    routeLines = traceInfo.routeLines;
+    window.requestAnimationFrame(drawTraceLineLoop);
+  };
+  
+  startingNameButton.addButtons(onClickCallback);
 }
 
 function createDistNameList(nameNum, parameters, distNameList) {
@@ -297,7 +313,7 @@ function setBorderColor(contentId, idx, color) {
 }
 
 // draw line ---------------
-const LineColors = [
+const LINE_COLORS = [
   '#FC0Fc0',
   '#C0Fc0F',
   '#0FC0FC',
@@ -378,7 +394,7 @@ function drawHorizontalLines(ctx, borders) {
 }
 
 function createTraceLineDrawers(ctx, verticalLines, horizontalLines, startX) {
-  ctx.strokeStyle = LineColors[(startX % LineColors.length)];
+  ctx.strokeStyle = LINE_COLORS[(startX % LINE_COLORS.length)];
   ctx.lineWidth = 5;
 
   let lastVIdx = verticalLines.length - 1;
@@ -435,61 +451,6 @@ function registerOnTraceEnd(onTraceEnd) {
   onTraceEndFunction = onTraceEnd;
 }
 
-var isTracing = false;
-function startDrawTraceLine(startIdx, nameCollector, isRealMode) {
-  if (isTracing) {
-    return;
-  }
-
-  if (isAlreadyNamed(startIdx)) {
-    return;
-  }
-
-  changeSourceNameList(startIdx, nameCollector.getCurrentName());
-
-  isTracing = true;
-  let color = LineColors[startIdx];
-  setBorderColor('fromNameList', startIdx, color);
-  let traceInfo = createTraceLineDrawers(ctx, verticalLines, horizontalLines, startIdx);
-
-  registerOnTraceEnd(async function(){
-    await new Promise(s => setTimeout(s, 100));
-
-    let distIdx = traceInfo.distIdx;
-    let distItem = setBorderColor('distNameList', distIdx, color);
-    if (distItem === null) {
-      return;
-    }
-    if (distItem.firstChild === null) {
-      return;
-    }
-
-    distItem.firstChild.classList.add('flipIn');
-    if (isRealMode) {
-      distItem.firstChild.textContent = distNameList[distIdx];
-    }
-    else {
-      distItem.firstChild.textContent = distNameList[nameCollector.getCurrentIndex()];
-    }
-
-    // @todo
-    // wait for finish anim
-    await new Promise(s => setTimeout(s, 2000));
-    isTracing = false;
-    if (nameCollector.isEnd()) {
-      changeTargetName("End");
-    }
-    else {
-      nameCollector.next();
-      changeTargetName(nameCollector.getCurrentName());
-    }
-  });
-
-  currentDrawingIdx = 0;
-  routeLines = traceInfo.routeLines;
-  window.requestAnimationFrame(drawTraceLineLoop);
-}
-
 // main ----------
 var distNameList = [];
 var isRealMode = false;
@@ -508,7 +469,7 @@ function main()
   }
 
   changeTargetName(nameCollector.getCurrentName());
-  addSourceNameList(nameCollector);
+  addStartingNameButton(nameCollector);
 
   if (isRealMode) {
     createDistNameList(nameNum, parameters, distNameList);
