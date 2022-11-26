@@ -1,35 +1,11 @@
-const TREE_BLOCK_HEIGHT = 30;
+export const TREE_BLOCK_HEIGHT = 30;
 
-class Line {
+export class Line {
   constructor(x1, y1, x2, y2) {
     this.x1 = x1;
     this.y1 = y1;
     this.x2 = x2;
     this.y2 = y2;
-  }
-}
-
-export class LineFactory {
-  static createVerticalLine(canvasWidth, idxX, idxY, treeNum) {
-    const gap = canvasWidth / treeNum;
-    const offset = gap * 0.5;
-    let x1 = idxX * gap + offset;
-    let y1 = idxY * TREE_BLOCK_HEIGHT;
-    let x2 = x1;
-    let y2 = y1 + TREE_BLOCK_HEIGHT;
-
-    return new Line(x1, y1, x2, y2);
-  }
-
-  static createHorizontalLine(canvasWidth, xIdx, yIdx, treeNum) {
-    const gap = canvasWidth / treeNum;
-    const offset = gap * 0.5;
-    let x1 = xIdx * gap + offset;
-    let x2 = x1 + gap;
-    let y1 = (yIdx + 1) * TREE_BLOCK_HEIGHT;
-    let y2 = y1;
-
-    return new Line(x1, y1, x2, y2);
   }
 }
 

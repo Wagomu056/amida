@@ -1,5 +1,15 @@
-import { LineFactory, NormalLineDrawer } from './line-core.js';
+import { Line, NormalLineDrawer, TREE_BLOCK_HEIGHT } from './line-core.js';
 import { shuffle, getRandomInt } from "./utils.js";
+
+function createHorizontalLine(xIdx, yIdx, length) {
+  const offset = length * 0.5;
+  let x1 = xIdx * length + offset;
+  let x2 = x1 + length;
+  let y1 = (yIdx + 1) * TREE_BLOCK_HEIGHT;
+  let y2 = y1;
+
+  return new Line(x1, y1, x2, y2);
+}
 
 export class HorizontalLineDrawer {
   constructor(ctx, nameNum, treeBlockCount) {
@@ -32,14 +42,14 @@ export class HorizontalLineDrawer {
       shuffle(indexes);
 
       let lineNum = 2 + getRandomInt(2);
+      let lineLength = (canvasWidth / nameNum);
       while (lineNum > 0) {
         if (indexes.length < lineNum) {
           break;
         }
 
         let y = indexes.pop();
-        borders[x][y] = LineFactory.createHorizontalLine(
-          canvasWidth, x, y, nameNum);
+        borders[x][y] = createHorizontalLine(x, y, lineLength);
         lineNum -= 1;
       }
     }

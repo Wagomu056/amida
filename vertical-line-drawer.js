@@ -1,13 +1,25 @@
-import { LineFactory, NormalLineDrawer } from './line-core.js';
+import { Line, NormalLineDrawer, TREE_BLOCK_HEIGHT } from './line-core.js';
+
+function createVerticalLine(idxX, idxY, gap) {
+  const offset = gap * 0.5;
+  let x1 = idxX * gap + offset;
+  let y1 = idxY * TREE_BLOCK_HEIGHT;
+  let x2 = x1;
+  let y2 = y1 + TREE_BLOCK_HEIGHT;
+
+  return new Line(x1, y1, x2, y2);
+}
 
 export class VerticalDrawer {
-  constructor(ctx, canvasWidth, nameNum, treeBlockCount) {
+  constructor(ctx, nameNum, treeBlockCount) {
+    let canvasWidth = ctx.canvas.clientWidth;
+
     let verticalLines = [];
+    let verticalGap = (canvasWidth / nameNum);
     for (let x = 0; x < nameNum; x++) {
       verticalLines[x] = [];
       for (let y = 0; y < treeBlockCount; y++) {
-        verticalLines[x][y] = LineFactory.createVerticalLine(
-          canvasWidth, x, y, nameNum);
+        verticalLines[x][y] = createVerticalLine(x, y, verticalGap);
       }
     }
 

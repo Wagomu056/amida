@@ -227,7 +227,7 @@ function main()
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   verticalLineDrawer = new VerticalDrawer(
-    ctx, define.canvasWidth, nameNum, define.treeBlockCount);
+    ctx, nameNum, define.treeBlockCount);
   verticalLineDrawer.draw();
 
   horizontalLineDrawer = new HorizontalLineDrawer(
