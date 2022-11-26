@@ -3,14 +3,13 @@
 import { ArrivalNameBox } from './arrival-name-box.js';
 import { NameCollector } from './name-collector.js';
 import { StartingNameButton } from './starting-name-button.js';
+import { LineFactory, LineDrawer } from './line-core.js';
+import { VerticalDrawer } from './vertical-line-drawer.js';
 import { shuffle, getRandomInt, playAnimation } from "./utils.js";
 
 const define = {};
 Object.defineProperty(define, 'canvasWidth', {
   value: 1200.0, writable: false
-});
-Object.defineProperty(define, 'treeBlockHeight', {
-  value: 30, writable: false
 });
 Object.defineProperty(define, 'treeBlockCount', {
   value: 15, writable: false
@@ -69,7 +68,7 @@ function createStartingNameButton(nameCollector, arrivalNameBox) {
   let onClickCallback = function(startIdx) {
     startingNameButton.setIsAllowClick(false);
 
-    let traceInfo = createTraceLineDrawers(ctx, verticalLines, horizontalLines, startIdx);
+    let traceInfo = createTraceLineDrawers(ctx, verticalLineDrawer, horizontalLines, startIdx);
 
     onTraceEndFunction = async function() {
       await new Promise(s => setTimeout(s, 100));
@@ -108,110 +107,6 @@ function createArrivalNameBox(nameCollector, isShuffle) {
   return arrivalNameBox;
 }
 
-// line core
-class Line {
-  constructor(x1, y1, x2, y2) {
-    this.x1 = x1;
-    this.y1 = y1;
-    this.x2 = x2;
-    this.y2 = y2;
-  }
-}
-
-class LineFactory {
-  static createVerticalLine(idxX, idxY, treeNum) {
-    const gap = define.canvasWidth / treeNum;
-    const offset = gap * 0.5;
-    let x1 = idxX * gap + offset;
-    let y1 = idxY * define.treeBlockHeight;
-    let x2 = x1;
-    let y2 = y1 + define.treeBlockHeight;
-
-    return new Line(x1, y1, x2, y2);
-  }
-
-  static createHorizontalLine(xIdx, yIdx, treeNum) {
-    const gap = define.canvasWidth / treeNum;
-    const offset = gap * 0.5;
-    let x1 = xIdx * gap + offset;
-    let x2 = x1 + gap;
-    let y1 = (yIdx + 1) * define.treeBlockHeight;
-    let y2 = y1;
-
-    return new Line(x1, y1, x2, y2);
-  }
-}
-
-class LineDrawer {
-  static getDir(from, to) {
-    if (from === to) { return 0; }
-
-    let val = to - from;
-    if (val > 0) { return 1; }
-    else { return -1; }
-  }
-
-  constructor(line) {
-    this.line = line;
-  }
-
-  init() {
-    this.currentX = this.startX;
-    this.currentY = this.startY;
-    this.dirX = LineDrawer.getDir(this.startX, this.goalX);
-    this.dirY = LineDrawer.getDir(this.startY, this.goalY);
-
-    this.isVertical = (this.currentX === this.goalX);
-  }
-
-  draw(ctx) {
-    ctx.beginPath();
-    ctx.moveTo(this.line.x1, this.line.y1);
-    ctx.lineTo(this.line.x2, this.line.y2);
-    ctx.stroke();
-  }
-
-  checkArrive(current, goal, speed) {
-    let diff = Math.abs(goal - current);
-    return (diff < speed);
-  }
-
-  drawBySeed(ctx, speed) {
-    ctx.beginPath();
-
-    let isFinish = false;
-    this.currentX += speed * this.dirX;
-    if (this.dirX !== 0 && this.checkArrive(this.currentX, this.goalX, speed)) {
-      this.currentX = this.goalX;
-      isFinish = true;
-    }
-
-    this.currentY += speed * this.dirY;
-    if (this.dirY !== 0 && this.checkArrive(this.currentY, this.goalY, speed)) {
-      this.currentY = this.goalY;
-      isFinish = true;
-    }
-
-    ctx.moveTo(this.startX, this.startY);
-    ctx.lineTo(this.currentX, this.currentY);
-
-    ctx.stroke();
-
-    // 縦描画は差分だけ描いたほうがギザギザにならない
-    if (this.isVertical) {
-      this.startX = this.currentX + (1 * this.dirX * -1);
-      this.startY = this.currentY + (1 * this.dirY * -1);
-    }
-
-    // 描き切ったときに、改めてstartからgoalまで描画することでギザギザしないようにする
-    if (isFinish) {
-      this.draw(ctx);
-    }
-
-    return isFinish;
-  }
-}
-
 // line drawer
 class NormalLineDrawer extends LineDrawer {
   constructor(line) {
@@ -241,30 +136,9 @@ class ReverseLineDrawer extends LineDrawer {
 
 // global vars
 var ctx;
-var verticalLines;
 var horizontalLines;
 
 // draw line ---------------
-function createVerticalLines(nameNum) {
-    let verticalLines = [];
-    for (let x = 0; x < nameNum; x++) {
-      verticalLines[x] = [];
-      for (let y = 0; y < define.treeBlockCount; y++) {
-        verticalLines[x][y] = LineFactory.createVerticalLine(x, y, nameNum);
-      }
-    }
-    return verticalLines;
-}
-
-function drawVerticalLine(ctx, verticalLines) {
-    ctx.strokeStyle = 'black';
-    for (const line of verticalLines) {
-      for (const lineBlock of line) {
-        new NormalLineDrawer(lineBlock, false).draw(ctx);
-      }
-    }
-}
-
 function createHorizontalLines(xNum, yNum, nameNum) {
   let borders = [];
   for (let x = 0; x < xNum; x++) {
@@ -292,7 +166,8 @@ function createHorizontalLines(xNum, yNum, nameNum) {
       }
 
       let y = indexes.pop();
-      borders[x][y] = LineFactory.createHorizontalLine(x, y, nameNum);
+      borders[x][y] = LineFactory.createHorizontalLine(
+        define.canvasWidth, x, y, nameNum);
       lineNum -= 1;
     }
   }
@@ -314,17 +189,17 @@ function drawHorizontalLines(ctx, borders) {
   }
 }
 
-function createTraceLineDrawers(ctx, verticalLines, horizontalLines, startX) {
+function createTraceLineDrawers(ctx, verticalLineDrawer, horizontalLines, startX) {
   ctx.strokeStyle = LINE_COLORS[(startX % LINE_COLORS.length)];
   ctx.lineWidth = 5;
 
-  let lastVIdx = verticalLines.length - 1;
+  let lastVIdx = verticalLineDrawer.getLineNum() - 1;
   let maxHorizontalCount = define.treeBlockCount - 1;
 
   let routeLines = [];
   let x = startX;
   for (let y = 0; y < define.treeBlockCount; y++) {
-    routeLines.push(new NormalLineDrawer(verticalLines[x][y]));
+    routeLines.push(new NormalLineDrawer(verticalLineDrawer.getLine(x, y)));
 
     if (y < maxHorizontalCount) {
       if (x < lastVIdx) {
@@ -369,6 +244,7 @@ function drawTraceLineLoop() {
 }
 
 // main ----------
+var verticalLineDrawer;
 function main()
 {
   const parameters = getURLParameters();
@@ -397,8 +273,9 @@ function main()
   ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  verticalLines = createVerticalLines(nameNum);
-  drawVerticalLine(ctx, verticalLines);
+  verticalLineDrawer = new VerticalDrawer(
+    ctx, define.canvasWidth, nameNum, define.treeBlockCount);
+  verticalLineDrawer.draw();
 
   horizontalLines = createHorizontalLines(
     nameNum - 1,
