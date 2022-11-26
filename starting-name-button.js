@@ -35,7 +35,7 @@ export class StartingNameButton {
           button.style.borderColor = this.lineColors[i];
 
           if (onClickCallback !== null) {
-            onClickCallback(i);
+            onClickCallback(i, this.lineColors[i]);
           }
         });
 

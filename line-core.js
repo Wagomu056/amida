@@ -1,4 +1,5 @@
 export const TREE_BLOCK_HEIGHT = 30;
+export const TREE_BLOCK_COUNT = 15;
 
 export class Line {
   constructor(x1, y1, x2, y2) {
@@ -87,6 +88,19 @@ export class NormalLineDrawer extends LineDrawer {
     this.startY = line.y1;
     this.goalX = line.x2;
     this.goalY = line.y2;
+
+    this.init();
+  }
+}
+
+export class ReverseLineDrawer extends LineDrawer {
+  constructor(line) {
+    super(line);
+
+    this.startX = line.x2;
+    this.startY = line.y2;
+    this.goalX = line.x1;
+    this.goalY = line.y1;
 
     this.init();
   }

@@ -3,18 +3,10 @@
 import { ArrivalNameBox } from './arrival-name-box.js';
 import { NameCollector } from './name-collector.js';
 import { StartingNameButton } from './starting-name-button.js';
-import { LineDrawer } from './line-core.js';
 import { VerticalDrawer } from './vertical-line-drawer.js';
 import { HorizontalLineDrawer } from './horizontal-line-drawer.js';
 import { playAnimation } from "./utils.js";
-
-const define = {};
-Object.defineProperty(define, 'canvasWidth', {
-  value: 1200.0, writable: false
-});
-Object.defineProperty(define, 'treeBlockCount', {
-  value: 15, writable: false
-});
+import { TraceLineDrawer } from './trace-line-drawer.js';
 
 const LINE_COLORS = [
   '#FC0Fc0',
@@ -62,26 +54,28 @@ function setOpenerNameTitle(name) {
 }
 
 // starting name button
-function createStartingNameButton(nameCollector, arrivalNameBox) {
+function createStartingNameButton(ctx, nameCollector, arrivalNameBox) {
   let startingNameButton = new StartingNameButton(
     'fromNameList', nameCollector, LINE_COLORS);
 
-  let onClickCallback = function(startIdx) {
+  let onClickCallback = function(startIdx, color) {
     startingNameButton.setIsAllowClick(false);
 
-    let traceInfo = createTraceLineDrawers(ctx, verticalLineDrawer, horizontalLineDrawer, startIdx);
+    let traceLineDrawer = new TraceLineDrawer(
+      ctx, verticalLineDrawer, horizontalLineDrawer, startIdx);
+    let distIdx = traceLineDrawer.getDistIndex();
 
-    onTraceEndFunction = async function() {
+    let onTraceEndFunction = async function() {
       await new Promise(s => setTimeout(s, 100));
 
-      let distIdx = traceInfo.distIdx;
-      arrivalNameBox.open(distIdx, LINE_COLORS[startIdx]);
+      arrivalNameBox.open(distIdx, color);
 
       // @todo
       // wait for finish anim
       await new Promise(s => setTimeout(s, 2000));
 
       startingNameButton.setIsAllowClick(true);
+
       if (nameCollector.isEndOpener()) {
         setOpenerNameTitle("End");
       }
@@ -91,9 +85,7 @@ function createStartingNameButton(nameCollector, arrivalNameBox) {
       }
     };
 
-    currentDrawingIdx = 0;
-    routeLines = traceInfo.routeLines;
-    window.requestAnimationFrame(drawTraceLineLoop);
+    traceLineDrawer.traceStart(onTraceEndFunction, color);
   };
   
   startingNameButton.addButtons(onClickCallback);
@@ -106,93 +98,6 @@ function createArrivalNameBox(nameCollector, isShuffle) {
   arrivalNameBox.addBoxes();
 
   return arrivalNameBox;
-}
-
-// line drawer
-class NormalLineDrawer extends LineDrawer {
-  constructor(line) {
-    super(line);
-
-    this.startX = line.x1;
-    this.startY = line.y1;
-    this.goalX = line.x2;
-    this.goalY = line.y2;
-
-    this.init();
-  }
-}
-
-class ReverseLineDrawer extends LineDrawer {
-  constructor(line) {
-    super(line);
-
-    this.startX = line.x2;
-    this.startY = line.y2;
-    this.goalX = line.x1;
-    this.goalY = line.y1;
-
-    this.init();
-  }
-}
-
-// global vars
-var ctx;
-
-// draw line ---------------
-function createTraceLineDrawers(ctx, verticalLineDrawer, horizontalLineDrawer, startX) {
-  ctx.strokeStyle = LINE_COLORS[(startX % LINE_COLORS.length)];
-  ctx.lineWidth = 5;
-
-  let lastVIdx = verticalLineDrawer.getLineNum() - 1;
-  let maxHorizontalCount = define.treeBlockCount - 1;
-
-  let routeLines = [];
-  let x = startX;
-  for (let y = 0; y < define.treeBlockCount; y++) {
-    routeLines.push(new NormalLineDrawer(verticalLineDrawer.getLine(x, y)));
-
-    if (y < maxHorizontalCount) {
-      if (x < lastVIdx) {
-        let line = horizontalLineDrawer.getLine(x, y);
-        if (line !== null) {
-          routeLines.push(new NormalLineDrawer(line));
-          x += 1;
-          continue;
-        }
-      }
-
-      if (x > 0) {
-        let line = horizontalLineDrawer.getLine(x - 1, y);
-        if (line !== null) {
-          routeLines.push(new ReverseLineDrawer(line));
-          x -= 1;
-          continue;
-        }
-      }
-    }
-  }
-
-  return {distIdx: x, routeLines: routeLines};
-}
-
-var currentDrawingIdx;
-var routeLines;
-var onTraceEndFunction = null;
-function drawTraceLineLoop() {
-  if (currentDrawingIdx >= routeLines.length ) {
-    if (onTraceEndFunction !== null) {
-      onTraceEndFunction();
-    }
-    return;
-  }
-
-  let isFinish = routeLines[currentDrawingIdx].drawBySeed(ctx, 5);
-
-  if (isFinish) {
-    currentDrawingIdx += 1;
-  }
-
-  window.requestAnimationFrame(drawTraceLineLoop);
 }
 
 // main ----------
@@ -213,25 +118,26 @@ function main()
     return;
   }
 
-  setOpenerNameTitle(nameCollector.getCurrentOpenerName());
-
-  let isShuffle = isRealMode;
-  let arrivalNameBox = createArrivalNameBox(nameCollector, isShuffle);
-  createStartingNameButton(nameCollector, arrivalNameBox);
-
   const canvas = document.getElementById('canvas');
   if (!canvas || !canvas.getContext){
       return;
   }
-  ctx = canvas.getContext('2d');
+  let ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  verticalLineDrawer = new VerticalDrawer(
-    ctx, nameNum, define.treeBlockCount);
+  // title
+  setOpenerNameTitle(nameCollector.getCurrentOpenerName());
+
+  // names
+  let isShuffle = isRealMode;
+  let arrivalNameBox = createArrivalNameBox(nameCollector, isShuffle);
+  createStartingNameButton(ctx, nameCollector, arrivalNameBox);
+
+  // lines
+  verticalLineDrawer = new VerticalDrawer(ctx, nameNum);
   verticalLineDrawer.draw();
 
-  horizontalLineDrawer = new HorizontalLineDrawer(
-    ctx, nameNum, define.treeBlockCount);
+  horizontalLineDrawer = new HorizontalLineDrawer(ctx, nameNum);
   horizontalLineDrawer.draw();
 }
 

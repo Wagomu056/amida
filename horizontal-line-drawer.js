@@ -1,4 +1,4 @@
-import { Line, NormalLineDrawer, TREE_BLOCK_HEIGHT } from './line-core.js';
+import { Line, NormalLineDrawer, TREE_BLOCK_HEIGHT, TREE_BLOCK_COUNT } from './line-core.js';
 import { shuffle, getRandomInt } from "./utils.js";
 
 function createHorizontalLine(xIdx, yIdx, length) {
@@ -12,11 +12,11 @@ function createHorizontalLine(xIdx, yIdx, length) {
 }
 
 export class HorizontalLineDrawer {
-  constructor(ctx, nameNum, treeBlockCount) {
+  constructor(ctx, nameNum) {
     this.ctx = ctx;
 
     let xNum = nameNum - 1;
-    let yNum = treeBlockCount - 1;
+    let yNum = TREE_BLOCK_COUNT - 1;
     this.horizontalLines = this.createHorizontalLines(
       xNum, yNum, nameNum, ctx.canvas.clientWidth);
   }
