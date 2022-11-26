@@ -102,3 +102,16 @@ export class LineDrawer {
     return isFinish;
   }
 }
+
+export class NormalLineDrawer extends LineDrawer {
+  constructor(line) {
+    super(line);
+
+    this.startX = line.x1;
+    this.startY = line.y1;
+    this.goalX = line.x2;
+    this.goalY = line.y2;
+
+    this.init();
+  }
+}

@@ -1,17 +1,4 @@
-import { LineFactory, LineDrawer } from './line-core.js';
-
-class NormalLineDrawer extends LineDrawer {
-  constructor(line) {
-    super(line);
-
-    this.startX = line.x1;
-    this.startY = line.y1;
-    this.goalX = line.x2;
-    this.goalY = line.y2;
-
-    this.init();
-  }
-}
+import { LineFactory, NormalLineDrawer } from './line-core.js';
 
 export class VerticalDrawer {
   constructor(ctx, canvasWidth, nameNum, treeBlockCount) {

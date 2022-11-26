@@ -3,9 +3,10 @@
 import { ArrivalNameBox } from './arrival-name-box.js';
 import { NameCollector } from './name-collector.js';
 import { StartingNameButton } from './starting-name-button.js';
-import { LineFactory, LineDrawer } from './line-core.js';
+import { LineDrawer } from './line-core.js';
 import { VerticalDrawer } from './vertical-line-drawer.js';
-import { shuffle, getRandomInt, playAnimation } from "./utils.js";
+import { HorizontalLineDrawer } from './horizontal-line-drawer.js';
+import { playAnimation } from "./utils.js";
 
 const define = {};
 Object.defineProperty(define, 'canvasWidth', {
@@ -68,7 +69,7 @@ function createStartingNameButton(nameCollector, arrivalNameBox) {
   let onClickCallback = function(startIdx) {
     startingNameButton.setIsAllowClick(false);
 
-    let traceInfo = createTraceLineDrawers(ctx, verticalLineDrawer, horizontalLines, startIdx);
+    let traceInfo = createTraceLineDrawers(ctx, verticalLineDrawer, horizontalLineDrawer, startIdx);
 
     onTraceEndFunction = async function() {
       await new Promise(s => setTimeout(s, 100));
@@ -136,60 +137,9 @@ class ReverseLineDrawer extends LineDrawer {
 
 // global vars
 var ctx;
-var horizontalLines;
 
 // draw line ---------------
-function createHorizontalLines(xNum, yNum, nameNum) {
-  let borders = [];
-  for (let x = 0; x < xNum; x++) {
-    borders[x] = [];
-    for (let y = 0; y < yNum; y++) {
-        borders[x][y] = null;
-    }
-
-    let indexes = [];
-    for (let y = 0; y < yNum; y++) {
-      if (x > 0 && borders[x - 1][y] !== null) {
-        continue;
-      }
-      if (indexes.includes(y - 1) || indexes.includes(y - 2)) {
-        continue;
-      }
-      indexes.push(y);
-    }
-    shuffle(indexes);
-
-    let lineNum = 2 + getRandomInt(2);
-    while (lineNum > 0) {
-      if (indexes.length < lineNum) {
-        break;
-      }
-
-      let y = indexes.pop();
-      borders[x][y] = LineFactory.createHorizontalLine(
-        define.canvasWidth, x, y, nameNum);
-      lineNum -= 1;
-    }
-  }
-
-  return borders;
-}
-
-function drawHorizontalLines(ctx, borders) {
-  ctx.strokeStyle = 'black';
-
-  let xCount = borders.length;
-  for (let x = 0; x < xCount; x++) {
-    let yCount = borders[x].length;
-    for (let y = 0; y < yCount; y++) {
-      if (borders[x][y] !== null) {
-        new NormalLineDrawer(borders[x][y]).draw(ctx);
-      }
-    }
-  }
-}
-
-function createTraceLineDrawers(ctx, verticalLineDrawer, horizontalLines, startX) {
+function createTraceLineDrawers(ctx, verticalLineDrawer, horizontalLineDrawer, startX) {
   ctx.strokeStyle = LINE_COLORS[(startX % LINE_COLORS.length)];
   ctx.lineWidth = 5;
 
@@ -203,16 +153,18 @@ function createTraceLineDrawers(ctx, verticalLineDrawer, horizontalLines, startX
 
     if (y < maxHorizontalCount) {
       if (x < lastVIdx) {
-        if (horizontalLines[x][y] !== null) {
-          routeLines.push(new NormalLineDrawer(horizontalLines[x][y]));
+        let line = horizontalLineDrawer.getLine(x, y);
+        if (line !== null) {
+          routeLines.push(new NormalLineDrawer(line));
           x += 1;
           continue;
         }
       }
 
       if (x > 0) {
-        if (horizontalLines[x - 1][y] !== null) {
-          routeLines.push(new ReverseLineDrawer(horizontalLines[x - 1][y]));
+        let line = horizontalLineDrawer.getLine(x - 1, y);
+        if (line !== null) {
+          routeLines.push(new ReverseLineDrawer(line));
           x -= 1;
           continue;
         }
@@ -245,6 +197,7 @@ function drawTraceLineLoop() {
 
 // main ----------
 var verticalLineDrawer;
+var horizontalLineDrawer;
 function main()
 {
   const parameters = getURLParameters();
@@ -277,11 +230,9 @@ function main()
     ctx, define.canvasWidth, nameNum, define.treeBlockCount);
   verticalLineDrawer.draw();
 
-  horizontalLines = createHorizontalLines(
-    nameNum - 1,
-    define.treeBlockCount - 1,
-    nameNum);
-  drawHorizontalLines(ctx, horizontalLines);
+  horizontalLineDrawer = new HorizontalLineDrawer(
+    ctx, nameNum, define.treeBlockCount);
+  horizontalLineDrawer.draw();
 }
 
 main();
