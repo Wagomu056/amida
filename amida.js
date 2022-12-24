@@ -100,6 +100,16 @@ function createArrivalNameBox(nameCollector, isShuffle) {
   return arrivalNameBox;
 }
 
+// footer
+function addFooter(isRealMode) {
+  if (isRealMode === false) {
+    return
+  }
+
+  const footer = document.getElementById("footer");
+  footer.appendChild(document.createTextNode("isRealMode"))
+}
+
 // main ----------
 var verticalLineDrawer;
 var horizontalLineDrawer;
@@ -139,6 +149,9 @@ function main()
 
   horizontalLineDrawer = new HorizontalLineDrawer(ctx, nameNum);
   horizontalLineDrawer.draw();
+
+  // footer
+  addFooter(isRealMode);
 }
 
 main();

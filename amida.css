@@ -88,3 +88,8 @@ p.item {
   margin: 0px 5px;
   padding: 0px, 30px;
 }
+
+.footer {
+  color: rgb(225, 225, 225);
+  text-align: right;
+}
